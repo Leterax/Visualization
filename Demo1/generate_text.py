@@ -87,7 +87,7 @@ def render_text_perimeter_balls(txt, pos=(0, 0), scale=16, color=(235, 64, 52), 
         particles.remove(particle)
 
     out = np.array([p.pos for p in particles])
-    out = out/np.linalg.norm(out)
+    # out = out/np.linalg.norm(out)
     return out
 
 

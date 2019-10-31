@@ -4,8 +4,7 @@ from pathlib import Path
 import moderngl
 import moderngl_window as mglw
 import numpy as np
-
-from Demo1.generate_text import render_text_perimeter_balls
+from pyrr import matrix44
 
 
 class BasicWindowConfig(mglw.WindowConfig):
@@ -19,13 +18,15 @@ class BasicWindowConfig(mglw.WindowConfig):
 
         self.prog = self.load_program("shader.glsl")
         self.prog['time'].value = 0.5
+        projection = matrix44.create_orthogonal_projection(*(0, 0), *self.wnd.buffer_size, -1.0, 1.0, dtype='f4')
+        self.prog['m_proj'].write(projection.tobytes())
 
-        # n = 1_000_000
-        target = render_text_perimeter_balls("Hey!", scale=300, pos=(75, 250))
-        n = target.shape[0]
+        n = 1_000_000_000_00
+        # target = render_text_perimeter_balls("Hey!", scale=300, pos=(75, 250))
+        # n = target.shape[0]
         vertices = (np.random.random_sample((n, 2)) - .5) * 2
 
-        #target = (np.random.random_sample((n, 2)) - .5) * 2
+        target = (np.random.random_sample((n, 2)) - .5) * 2
 
         self.vbo_1 = self.ctx.buffer(vertices.astype('f4').tobytes())
         self.vbo_2 = self.ctx.buffer(target.astype('f4').tobytes())
