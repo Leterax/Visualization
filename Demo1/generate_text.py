@@ -58,9 +58,9 @@ def render_text_perimeter_balls(txt, pos=(0, 0), scale=16, color=(235, 64, 52), 
         for x in range(a.size[1]):
             out[y, x] = a.getpixel((y, x))
 
-    out = np.rot90(out / 255, 2)
+    out = out / 255
     out = np.where(out > 0, 1, 0)
-    out = np.rot90(out.T)
+    out = np.rot90(out)
 
     kernel = np.array([[1, 1, 1], [1, 0, 1], [1, 1, 1]])
     out = convolve(out, kernel, mode='constant')
@@ -86,7 +86,12 @@ def render_text_perimeter_balls(txt, pos=(0, 0), scale=16, color=(235, 64, 52), 
     for particle in to_remove:
         particles.remove(particle)
 
-    return np.array([p.pos for p in particles])
+    out = np.array([p.pos for p in particles])
+    out = out/np.linalg.norm(out)
+    return out
+
+
+
 
 
 if __name__ == "__main__":
