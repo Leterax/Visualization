@@ -86,7 +86,7 @@ def render_text_perimeter_balls(txt, pos=(0, 0), scale=16, color=(235, 64, 52), 
     for particle in to_remove:
         particles.remove(particle)
 
-    return particles
+    return np.array([p.pos for p in particles])
 
 
 if __name__ == "__main__":
