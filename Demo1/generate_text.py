@@ -5,7 +5,7 @@ from scipy.spatial import cKDTree
 
 
 class Particle:
-    def __init__(self, x, y, color, ball_size=4.5):
+    def __init__(self, x, y, color, ball_size=1):
         self.pos = np.array([x, y]).astype(float)
         self.vel = np.zeros(2)
         self.acc = np.zeros(2)
