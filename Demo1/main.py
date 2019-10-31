@@ -22,6 +22,8 @@ class BasicWindowConfig(mglw.WindowConfig):
         projection = matrix44.create_orthogonal_projection(0, self.wnd.size[0], 0, self.wnd.size[1], -1.0, 1.0,
                                                            dtype='f4')
 
+        model_view = matrix44.create_from_axis_rotation
+
         size = 1
         self.is_paused = False
 
@@ -50,22 +52,20 @@ class BasicWindowConfig(mglw.WindowConfig):
         self.ctx.clear(0)
         self.ctx.enable(moderngl.BLEND)
         self.ctx.blend_func = moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA
-        if not self.is_paused:
-            self.prog['time'].value = min(time / 1, 1.0)
+
+        self.prog['time'].value = min(time / 1, 1.0)
         self.vao.render(mode=moderngl.POINTS)
 
     def mouse_drag_event(self, x, y):
-        self.prog['time'].value = max(0, min(x / self.wnd.buffer_width, 1))
+        self.timer.time = max(0, min(x / self.wnd.buffer_width, 1))
 
     def key_event(self, key, action, modifiers):
         keys = self.wnd.keys
 
         if action == keys.ACTION_PRESS:
             if key == keys.SPACE:
-                self.is_paused = not self.is_paused
                 self.timer.toggle_pause()
 
 
 if __name__ == '__main__':
-    time.sleep(2)
     mglw.run_window_config(BasicWindowConfig)

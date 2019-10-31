@@ -12,7 +12,7 @@ void main() {
     vert_target = target;
 }
 
-#elif defined GEOMETRY_SHADER
+    #elif defined GEOMETRY_SHADER
 
 layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
@@ -21,6 +21,7 @@ uniform float time;
 uniform mat4 m_proj;
 uniform float size;
 
+uniform mat4 model_view;
 
 in vec2 vert_target[1];
 out vec2 uv;
@@ -52,7 +53,7 @@ void main() {
     EndPrimitive();
 }
 
-#elif defined FRAGMENT_SHADER
+    #elif defined FRAGMENT_SHADER
 
 out vec4 fragColor;
 in vec2 uv;
@@ -65,4 +66,4 @@ void main() {
     float len = step(0.0, 0.5 - length(pos));
     fragColor = vec4(color*len, len);
 }
-#endif
+    #endif
