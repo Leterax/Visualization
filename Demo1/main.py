@@ -13,7 +13,7 @@ class BasicWindowConfig(mglw.WindowConfig):
     """Minimal WindowConfig example"""
     gl_version = (3, 3)
     title = "Basic Window Config"
-    resource_dir = Path(__file__).parent.joinpath('../resources').resolve()
+    resource_dir = Path(__file__).parent.joinpath('resources').resolve()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -24,7 +24,7 @@ class BasicWindowConfig(mglw.WindowConfig):
 
         model_view = matrix44.create_from_axis_rotation
 
-        size = 1
+        size = 10
         self.is_paused = False
 
         target = render_text_perimeter_balls("Hey!", scale=300, pos=(75, 250), ball_size=size)

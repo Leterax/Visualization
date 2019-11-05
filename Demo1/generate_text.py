@@ -51,7 +51,7 @@ class Particle:
 
 def render_text_perimeter_balls(txt, pos=(0, 0), scale=16, color=(235, 64, 52), ball_size=4.5):
     # place particles on the text outline without overlapping them.
-    font = ImageFont.truetype(r"..\resources\VCR_OSD_MONO_1.001.ttf", scale)
+    font = ImageFont.truetype(r"resources\VCR_OSD_MONO_1.001.ttf", scale)
     a = font.getmask(txt)
     out = np.empty(a.size)
     for y in range(a.size[0]):

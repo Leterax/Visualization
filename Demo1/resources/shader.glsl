@@ -12,7 +12,7 @@ void main() {
     vert_target = target;
 }
 
-    #elif defined GEOMETRY_SHADER
+#elif defined GEOMETRY_SHADER
 
 layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
@@ -53,7 +53,7 @@ void main() {
     EndPrimitive();
 }
 
-    #elif defined FRAGMENT_SHADER
+#elif defined FRAGMENT_SHADER
 
 out vec4 fragColor;
 in vec2 uv;
