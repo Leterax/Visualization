@@ -86,9 +86,8 @@ class DroneViz(mglw.WindowConfig):
 
         self.render_program['projection'].write(self.camera.projection.tobytes())
         self.render_program['m_camera'].write(self.camera.matrix.astype('f4').tobytes())
-        self.cube = Cube()
-        self.cube.scale(.5, .5, .5)
-
+        self.cube = Cube(size=(.5, .5, .5))
+        
     def render(self, time, frame_time):
         self.ctx.clear(51 / 255, 51 / 255, 51 / 255)
         self.ctx.enable_only(moderngl.DEPTH_TEST | moderngl.CULL_FACE)
