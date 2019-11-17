@@ -1,4 +1,3 @@
-import struct
 from pathlib import Path
 
 import moderngl
@@ -20,10 +19,10 @@ class Boids(moderngl_window.WindowConfig):
         self.program = self.load_program('my_shader.glsl')
         self.render_boids = self.load_program('render_boids.glsl')
 
-        n = 512
+        n = 2**20
 
-        positions = np.random.random_sample((n, 3))
-        velocities = np.random.random_sample((n, 3)) / 2.
+        positions = (np.random.random_sample((n, 2))-.5) * 2.
+        velocities = (np.random.random_sample((n, 2))-.5) / 100.
         pos_vel = np.array([*zip(positions.tolist(), velocities.tolist())]).flatten().astype('f4')
 
         self.vbo_1 = self.ctx.buffer(pos_vel.tobytes())
