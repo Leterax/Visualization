@@ -1,3 +1,4 @@
+import math
 from pathlib import Path
 
 import moderngl
@@ -5,77 +6,66 @@ import moderngl_window as mglw
 import numpy as np
 from moderngl_window import geometry
 from moderngl_window.scene.camera import KeyboardCamera
-
-CUBE_VERTICES = np.array([
-    # front
-    -1.0, -1.0, 1.0,
-    1.0, -1.0, 1.0,
-    1.0, 1.0, 1.0,
-    -1.0, 1.0, 1.0,
-    # back
-    -1.0, -1.0, -1.0,
-    1.0, -1.0, -1.0,
-    1.0, 1.0, -1.0,
-    -1.0, 1.0, -1.0
-])
-SHOULD_ROTATE_AND_SCALE = True
+from pyrr import Matrix44
 
 
-class ModelMatrix:
+class Object:
     def __init__(self):
-        self._translation_matrix = np.eye(4)
+        self._scale = np.array((0., 0., 0.))
+        self._rotation = np.array((0., 0., 0.))
+        self._translation = np.array((0., 0., 0.))
 
-        self._scaling_matrix = np.eye(4)
+        self._mt = np.eye(4)
+        self._mr = np.eye(4)
+        self._ms = np.eye(4)
+        self.matrix = None
 
-        self._rotation_matrix_x = np.eye(4)
-        self._rotation_matrix_y = np.eye(4)
-        self._rotation_matrix_z = np.eye(4)
-
-        self._rotations = (self._rotate_x, self._rotate_y, self._rotate_z)
+    # translation
+    def set_translate(self, *xyz):
+        self._translation = xyz
+        self._mt = Matrix44.from_translation(self._translation)
 
     def translate(self, *xyz):
-        self._translation_matrix[-1, 0] = xyz[0]
-        self._translation_matrix[-1, 1] = xyz[1]
-        self._translation_matrix[-1, 2] = xyz[2]
+        self._translation += xyz
+        self._mt = Matrix44.from_translation(self._translation)
+
+    # rotation
+    def set_rotation(self, *xyz):
+        self._rotation = xyz
+        self._mr = Matrix44.from_eulers(self._rotation)
+
+    def rotate(self, *xyz):
+        self._rotation += xyz
+        self._mr = Matrix44.from_eulers(self._rotation)
+
+    # scale
+    def set_scale(self, *xyz):
+        self._scale = xyz
+        self._ms = Matrix44.from_scale(self._scale)
 
     def scale(self, *xyz):
-        self._scaling_matrix[0, 0] = xyz[0]
-        self._scaling_matrix[1, 1] = xyz[1]
-        self._scaling_matrix[2, 2] = xyz[2]
+        self._scale += xyz
+        self._ms = Matrix44.from_scale(self._scale)
 
-    def rotate(self, theta, axis=0):
-        self._rotations[axis](theta)
-
-    # axis rotation functions #
-
-    def _rotate_x(self, theta):
-        self._rotation_matrix_x[1, 1] = np.cos(theta)
-        self._rotation_matrix_x[1, 2] = -np.sin(theta)
-        self._rotation_matrix_x[2, 1] = np.sin(theta)
-        self._rotation_matrix_x[2, 2] = np.cos(theta)
-
-    def _rotate_y(self, theta):
-        self._rotation_matrix_y[0, 0] = np.cos(theta)
-        self._rotation_matrix_y[2, 0] = -np.sin(theta)
-        self._rotation_matrix_y[0, 2] = np.sin(theta)
-        self._rotation_matrix_y[2, 2] = np.cos(theta)
-
-    def _rotate_z(self, theta):
-        self._rotation_matrix_z[0, 0] = np.cos(theta)
-        self._rotation_matrix_z[0, 1] = -np.sin(theta)
-        self._rotation_matrix_z[1, 0] = np.sin(theta)
-        self._rotation_matrix_z[1, 1] = np.cos(theta)
+    def render(self, *args):
+        raise NotImplemented()
 
     @property
     def matrix(self):
-        # Translate-Rotate-Scale
-        return (self._scaling_matrix @
-                self._rotation_matrix_z @ self._rotation_matrix_y @ self._rotation_matrix_x @
-                self._translation_matrix).astype(float).T
+        return (self._mt * self._mr * self._ms).astype('f4')
 
     @matrix.setter
     def matrix(self, value):
         pass
+
+
+class Cube(Object):
+    def __init__(self, pos=(0, 0, 0), size=(1, 1, 1)):
+        super().__init__()
+        self._cube = geometry.cube(size=size, center=pos)
+
+    def render(self, program):
+        self._cube.render(program)
 
 
 class DroneViz(mglw.WindowConfig):
@@ -91,37 +81,27 @@ class DroneViz(mglw.WindowConfig):
         super().__init__(**kwargs)
         self.wnd.mouse_exclusivity = True
         self.camera = KeyboardCamera(self.wnd.keys, aspect_ratio=self.wnd.aspect_ratio)
-        self.camera_enabled = True
+        self.camera_enabled = False
         self.render_program = self.load_program('my_shader.glsl')
 
         self.render_program['projection'].write(self.camera.projection.tobytes())
-        self.model_matrix = ModelMatrix()
-
-        self.render_program['model'].write(self.model_matrix.matrix.astype('f4').tobytes())
         self.render_program['m_camera'].write(self.camera.matrix.astype('f4').tobytes())
-        self.cube = geometry.cube(size=(1.0, 1.0, 1.0))
+        self.cube = Cube()
+        self.cube.scale(.5, .5, .5)
 
     def render(self, time, frame_time):
-        self.ctx.clear(0)
+        self.ctx.clear(51 / 255, 51 / 255, 51 / 255)
         self.ctx.enable_only(moderngl.DEPTH_TEST | moderngl.CULL_FACE)
 
-        if SHOULD_ROTATE_AND_SCALE:
-            # rotate cube
-            self.model_matrix.rotate(time % np.pi)
-            self.model_matrix.rotate(time % np.pi, 1)
-            self.model_matrix.rotate(time % np.pi, 2)
-
-            # make scale loop between 2 values
-            v = time % np.pi
-            if v > np.pi / 2:
-                v = np.pi - v
-                self.model_matrix.scale(v, v, v)
-            else:
-                self.model_matrix.scale(v, v, v)
-
         # self.render_program['time'].value = min(time / 1, 1.0)
-        self.render_program['model'].write(self.model_matrix.matrix.astype('f4').tobytes())
-        self.render_program['m_camera'].write(self.camera.matrix.astype('f4').tobytes())
+
+        s = math.sin(time * 2) / 2 + 1.5
+
+        self.cube.set_rotation(time, time / 2, time / 3)
+        self.cube.set_translate(s * 4 - 6, 0, -3.0)
+
+        self.render_program['model'].write(self.cube.matrix)
+        self.render_program['m_camera'].write(self.camera.matrix.astype('f4'))
         self.cube.render(self.render_program)
 
     def key_event(self, key, action, modifiers):
@@ -137,9 +117,6 @@ class DroneViz(mglw.WindowConfig):
                 self.wnd.cursor = not self.camera_enabled
             if key == keys.SPACE:
                 self.timer.toggle_pause()
-            if key == keys.H:
-                self.model_matrix.translate(1, 0, 0)
-                print(self.model_matrix.matrix)
 
     def mouse_position_event(self, x: int, y: int, dx, dy):
         if self.camera_enabled:
