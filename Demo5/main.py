@@ -9,7 +9,7 @@ class Boids(moderngl_window.WindowConfig):
     title = "Boids"
     resource_dir = (Path(__file__) / '../resources').absolute()
     aspect_ratio = None
-    window_size = 720, 720
+    window_size = 1024, 1024
     resizable = False
     samples = 4
 
@@ -19,10 +19,12 @@ class Boids(moderngl_window.WindowConfig):
         self.program = self.load_program('my_shader.glsl')
         self.render_boids = self.load_program('render_boids.glsl')
 
-        n = 2**20
+        n = 2 ** 9  # 2**24 = 16_777_216
+        self.render_boids['size'].value = 0.01
+        self.render_boids['num_boids'].value = n*2.
 
-        positions = (np.random.random_sample((n, 2))-.5) * 2.
-        velocities = (np.random.random_sample((n, 2))-.5) / 100.
+        positions = (np.random.random_sample((n, 2)) - .5) * 2.
+        velocities = (np.random.random_sample((n, 2)) - .5) / 100.
         pos_vel = np.array([*zip(positions.tolist(), velocities.tolist())]).flatten().astype('f4')
 
         self.vbo_1 = self.ctx.buffer(pos_vel.tobytes())
@@ -42,13 +44,13 @@ class Boids(moderngl_window.WindowConfig):
 
         self.vao_3 = self.ctx.vertex_array(
             self.render_boids, [
-                (self.vbo_1, '2f4 2x4', 'in_position'),
+                (self.vbo_1, '2f4 2f4', 'in_position', 'in_velocity'),
             ]
         )
 
         self.vao_4 = self.ctx.vertex_array(
             self.render_boids, [
-                (self.vbo_2, '2f4 2x4', 'in_position'),
+                (self.vbo_2, '2f4 2f4', 'in_position', 'in_velocity'),
             ]
         )
 
@@ -56,6 +58,7 @@ class Boids(moderngl_window.WindowConfig):
 
     def render(self, time, frame_time):
         # self.program['time'].value = time
+        self.ctx.clear(51/255, 51/255, 51/255)
         self.vao_3.render(mode=moderngl.POINTS)
         self.vao_1.transform(self.vbo_2)
 
