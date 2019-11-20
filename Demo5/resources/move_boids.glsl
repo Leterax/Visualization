@@ -15,10 +15,13 @@ void main() {
     out_position = pos;
 
     out_velocity = in_velocity + in_acceleration;
-    if (length(out_velocity) < 0.001){
-        out_velocity = normalize(out_velocity)*0.005;
+    if (length(out_velocity) < 0.003){
+        out_velocity = normalize(out_velocity)*0.003;
     }
-    out_acceleration = vec2(0.);
+    if (length(out_velocity) > 0.01){
+        out_velocity = normalize(out_velocity)*0.01;
+    }
+    out_acceleration = in_acceleration;
 }
 
     #endif

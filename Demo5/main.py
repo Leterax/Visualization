@@ -5,7 +5,7 @@ import moderngl_window
 import numpy as np
 from moderngl_window.geometry import quad_fs
 from moderngl_window.opengl.vao import VAO
-
+import struct
 
 class Boids(moderngl_window.WindowConfig):
     title = "Boids"
@@ -29,7 +29,7 @@ class Boids(moderngl_window.WindowConfig):
         self.fbo_1 = self.ctx.framebuffer(color_attachments=[self.texture_1])
         # self.fbo_2 = self.ctx.framebuffer(color_attachments=[self.texture_2])
 
-        n = 2 ** 2  # 2**24 = 16_777_216
+        n = 3 ** 5  # 2**24 = 16_777_216
         self.render_boids['size'].value = 0.01
         self.render_boids['num_boids'].value = n
 
@@ -61,16 +61,20 @@ class Boids(moderngl_window.WindowConfig):
         self.boids_vao_1.render(self.boid_points, mode=moderngl.POINTS)
 
         # output updated velocity
-        # self.boids_vao_1.transform(self.boid_logic, self.boids_buffer_2)
+        self.boids_vao_1.transform(self.boid_logic, self.boids_buffer_2)
         # update their positions
-        self.boids_vao_1.transform(self.move_program, self.boids_buffer_2)
+        self.boids_vao_2.transform(self.move_program, self.boids_buffer_1)
 
         # render boids to screen
         self.wnd.fbo.use()
         self.boids_vao_1.render(self.render_boids, mode=moderngl.POINTS)
+        print(f"boid1: {struct.unpack('6f', self.boids_buffer_1.read()[0:24])}")
+        # print(f"boid2: {struct.unpack('6f', self.boids_buffer_1.read()[24:24*2])}")
+        # print(f"boid3: {struct.unpack('6f', self.boids_buffer_1.read()[24*2:24*3])}")
+        # print(f"boid4: {struct.unpack('6f', self.boids_buffer_1.read()[24*3:24*4])}")
 
-        self.boids_vao_1, self.boids_vao_2 = self.boids_vao_2, self.boids_vao_1
-        self.boids_buffer_1, self.boids_buffer_2 = self.boids_buffer_2, self.boids_buffer_1
+        # self.boids_vao_1, self.boids_vao_2 = self.boids_vao_2, self.boids_vao_1
+        # self.boids_buffer_1, self.boids_buffer_2 = self.boids_buffer_2, self.boids_buffer_1
 
 
 if __name__ == '__main__':

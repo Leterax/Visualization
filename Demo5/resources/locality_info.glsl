@@ -4,6 +4,7 @@
 
 in vec2 in_position;
 in vec2 in_velocity;
+in vec2 in_acceleration;
 
 uniform sampler2D texture0;
 
@@ -37,19 +38,21 @@ void main() {
         steering_vel /= total;
     }
 
-    steering_vel *= max_speed;
-    steering_vel -= in_velocity;
+    //steering_vel *= max_speed;
+    //steering_vel -= in_velocity;
 
-    if (length(steering_vel) > 0.0004){
-        steering_vel = normalize(steering_vel)*0.0004;
+    if (length(steering_vel) > 0.0001){
+        steering_vel = normalize(steering_vel)*0.0001;
     }
 
 
-    gl_Position = vec4(in_position, 0.0, 1.0);
+
 
     pos = in_position;
     vel = in_velocity;
     acc = steering_vel;
+
+    gl_Position = vec4(in_position, 0.0, 1.0);
 }
 
     #endif
