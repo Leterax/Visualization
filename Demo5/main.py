@@ -79,7 +79,8 @@ class Boids(moderngl_window.WindowConfig):
         self.boids_vao_1.render(self.render_boids, mode=moderngl.POINTS)
         if math.isnan(struct.unpack('6f', self.boids_buffer_1.read()[0:24])[0]):
             print("uh oh")
-        print(f"boid1: {struct.unpack('6f', self.boids_buffer_1.read()[0:24])}")
+        # v = struct.unpack('6f', self.boids_buffer_1.read()[0:24])
+        # print(f"boid1: ({v[-2]:.3f}, {v[-1]:.3f})")
         # print(f"boid2: {struct.unpack('6f', self.boids_buffer_1.read()[24:24*2])}")
         # print(f"boid3: {struct.unpack('6f', self.boids_buffer_1.read()[24*2:24*3])}")
         # print(f"boid4: {struct.unpack('6f', self.boids_buffer_1.read()[24*3:24*4])}")

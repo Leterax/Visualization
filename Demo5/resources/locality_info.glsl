@@ -31,9 +31,9 @@ void main() {
     for (int x = bpos.x - view / 2; x < view; x++){
         for (int y = bpos.y - view / 2; y < view; y++){
             vec4 info = texelFetch(texture0, ivec2(x, y), 0);
-            if (info.x<0.001 && info.y<0.001 && info.z<0.001 && info.w<0.001){
-//            if ((info != vec4(0.)) && (vec2(x, y) != vec2(0))){
-                steering_vel_allign += info.xy;
+            if (info.x>0.001 || info.y>0.001 || info.z>0.001 || info.w>0.001){
+                vec2 diff = in_position - info.xy;
+                steering_vel_allign += (1/ length(diff)) * info.zw;
                 //steering_vel_cohesion += info.zw;
                 total += 1.;
             }
@@ -42,19 +42,16 @@ void main() {
 
     if (total > 0.){
         steering_vel_allign /= total;
-        //steering_vel_cohesion /= total;
 
-        //steering_vel_allign -= in_velocity;
+        steering_vel_allign -= in_velocity;
+        steering_vel_allign *= max_speed;
 
-        if (length(steering_vel_allign) > 1.){
-            steering_vel_allign = normalize(steering_vel_allign)*1.;
+        if (length(steering_vel_allign) > .4){
+            steering_vel_allign = normalize(steering_vel_allign)* .4;
         }
-//        if (length(steering_vel_cohesion) > 0.1){
-//            steering_vel_cohesion = normalize(steering_vel_cohesion)*0.1;
-//        }
     }
     else {
-
+        steering_vel_allign = vec2(0.);
     }
 
 
@@ -66,7 +63,7 @@ void main() {
     vel = in_velocity;
     acc = result;
 
-    gl_Position = vec4(in_position, 0.0, 1.0);
+    //gl_Position = vec4(in_position, 0.0, 1.0);
 }
 
     #endif
