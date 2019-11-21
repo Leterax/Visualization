@@ -1,5 +1,3 @@
-import math
-import struct
 from pathlib import Path
 
 import moderngl
@@ -38,7 +36,7 @@ class Boids(moderngl_window.WindowConfig):
         self.fbo_1 = self.ctx.framebuffer(color_attachments=[self.texture_1])
         # self.fbo_2 = self.ctx.framebuffer(color_attachments=[self.texture_2])
 
-        n = 3 ** 6  # 2**24 = 16_777_216
+        n = 3 ** 13  # 2**24 = 16_777_216
         self.render_boids['size'].value = 0.01
         self.render_boids['num_boids'].value = n
 
@@ -77,8 +75,8 @@ class Boids(moderngl_window.WindowConfig):
         # render boids to screen
         self.wnd.fbo.use()
         self.boids_vao_1.render(self.render_boids, mode=moderngl.POINTS)
-        if math.isnan(struct.unpack('6f', self.boids_buffer_1.read()[0:24])[0]):
-            print("uh oh")
+        # if math.isnan(struct.unpack('6f', self.boids_buffer_1.read()[0:24])[0]):
+        #    print("uh oh")
         # v = struct.unpack('6f', self.boids_buffer_1.read()[0:24])
         # print(f"boid1: ({v[-2]:.3f}, {v[-1]:.3f})")
         # print(f"boid2: {struct.unpack('6f', self.boids_buffer_1.read()[24:24*2])}")

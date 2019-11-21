@@ -22,19 +22,22 @@ void main() {
     vec2 result;
 
     vec2 steering_vel_allign;
-    //vec2 steering_vel_cohesion;
+    vec2 steering_vel_cohesion;
+    vec2 steering_vel_seperation;
 
     float total = 0.;
 
-    ivec2 bpos = ivec2(in_position);
+    ivec2 bpos = ivec2((vec2(in_position) + vec2(100)) / 200.0 * vec2(textureSize(texture0, 0)));
 
     for (int x = bpos.x - view / 2; x < bpos.x + view / 2; x++){
         for (int y = bpos.y - view / 2; y < bpos.y + view / 2; y++){
             vec4 info = texelFetch(texture0, ivec2(x, y), 0);
             if (info.x>0.001 || info.y>0.001 || info.z>0.001 || info.w>0.001){
                 vec2 diff = in_position - info.xy;
+
                 steering_vel_allign += (1/ length(diff)) * info.zw;
-                //steering_vel_cohesion += info.zw;
+                steering_vel_cohesion += (1/ length(diff)) * info.xy;
+                steering_vel_seperation += (1/ length(diff)) * (in_position - info.xy);
                 total += 1.;
             }
         }
@@ -42,23 +45,36 @@ void main() {
 
     if (total > 0.){
         steering_vel_allign /= total;
-
         steering_vel_allign -= in_velocity;
+
+        steering_vel_cohesion /= total;
+        steering_vel_cohesion -= in_position;
+        steering_vel_cohesion -= in_velocity;
+
+        steering_vel_seperation /= total;
+
 
 
         if (length(steering_vel_allign) > .4){
             steering_vel_allign = normalize(steering_vel_allign)* .4;
         }
-//        steering_vel_allign *= max_speed;
+        if (length(steering_vel_cohesion) > .4){
+            steering_vel_cohesion = normalize(steering_vel_cohesion)* .4;
+        }
+        if (length(steering_vel_seperation) > .4){
+            steering_vel_seperation = normalize(steering_vel_seperation)* .4;
+        }
+
     }
     else {
         steering_vel_allign = vec2(0.);
+        steering_vel_cohesion = vec2(0.);
     }
 
 
 
 
-    result = steering_vel_allign;
+    result = steering_vel_allign + steering_vel_cohesion; //+ steering_vel_seperation;
 
     pos = in_position;
     vel = in_velocity;
