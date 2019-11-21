@@ -8,7 +8,7 @@ in vec2 in_acceleration;
 
 uniform sampler2D texture0;
 
-const int view = 100;
+const int view = 50;
 
 
 out vec2 pos;
@@ -28,8 +28,8 @@ void main() {
 
     ivec2 bpos = ivec2(in_position);
 
-    for (int x = bpos.x - view / 2; x < view; x++){
-        for (int y = bpos.y - view / 2; y < view; y++){
+    for (int x = bpos.x - view / 2; x < bpos.x + view / 2; x++){
+        for (int y = bpos.y - view / 2; y < bpos.y + view / 2; y++){
             vec4 info = texelFetch(texture0, ivec2(x, y), 0);
             if (info.x>0.001 || info.y>0.001 || info.z>0.001 || info.w>0.001){
                 vec2 diff = in_position - info.xy;
@@ -44,11 +44,12 @@ void main() {
         steering_vel_allign /= total;
 
         steering_vel_allign -= in_velocity;
-        steering_vel_allign *= max_speed;
+
 
         if (length(steering_vel_allign) > .4){
             steering_vel_allign = normalize(steering_vel_allign)* .4;
         }
+//        steering_vel_allign *= max_speed;
     }
     else {
         steering_vel_allign = vec2(0.);

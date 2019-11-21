@@ -11,7 +11,7 @@ out vec2 out_acceleration;
 
 
 void main() {
-
+    float speed = length(in_velocity);
     vec2 pos = mod((in_position+in_velocity)+vec2(100., 100.), 200.) - vec2(100., 100.);
     vec2 updated_velocity;
 
@@ -24,12 +24,10 @@ void main() {
     updated_velocity = in_velocity + acceleration;
 
     float l = length(updated_velocity);
-    if (l < 0.3 && l > SMALL){
-        updated_velocity = updated_velocity/l*0.3;
+    if (l > SMALL){
+        updated_velocity = normalize(updated_velocity)*speed;
     }
-    else if (l > 3.){
-        updated_velocity = updated_velocity/l*3.;
-    }
+
 
 
 
