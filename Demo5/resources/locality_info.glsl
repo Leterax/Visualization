@@ -8,7 +8,7 @@ in vec2 in_acceleration;
 
 uniform sampler2D texture0;
 
-const int view = 50;
+const int view = 2;
 
 
 out vec2 pos;
@@ -27,7 +27,9 @@ void main() {
 
     float total = 0.;
 
-    ivec2 bpos = ivec2((vec2(in_position) + vec2(100)) / 200.0 * vec2(textureSize(texture0, 0)));
+    ivec2 bpos = ivec2(
+        (vec2(in_position) + vec2(100)) / 200.0 * vec2(textureSize(texture0, 0))
+    );
 
     for (int x = bpos.x - view / 2; x < bpos.x + view / 2; x++){
         for (int y = bpos.y - view / 2; y < bpos.y + view / 2; y++){
@@ -74,7 +76,7 @@ void main() {
 
 
 
-    result = steering_vel_allign + steering_vel_cohesion; //+ steering_vel_seperation;
+    result = steering_vel_seperation;
 
     pos = in_position;
     vel = in_velocity;

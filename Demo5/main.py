@@ -36,7 +36,7 @@ class Boids(moderngl_window.WindowConfig):
         self.fbo_1 = self.ctx.framebuffer(color_attachments=[self.texture_1])
         # self.fbo_2 = self.ctx.framebuffer(color_attachments=[self.texture_2])
 
-        n = 3 ** 13  # 2**24 = 16_777_216
+        n = 3 ** 5  # 2**24 = 16_777_216
         self.render_boids['size'].value = 0.01
         self.render_boids['num_boids'].value = n
 
