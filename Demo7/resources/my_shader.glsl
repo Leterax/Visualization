@@ -13,32 +13,47 @@ void main() {
 
     #elif defined FRAGMENT_SHADER
 out vec4 fragColor;
-in vec2 gl_FragCoord;
+layout(pixel_center_integer) in vec4 gl_FragCoord;
+
 uniform float time;
 uniform vec2 wnd_size;
+
 uniform vec2 c;
 uniform int iter;
+uniform float R;
 
-uniform vec4 box;
+uniform vec2 center;
+uniform float zoom;
+
+
+vec3 hsv2rgb(vec3 c)
+{
+    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
 
 void main() {
-    vec2 z;
-    vec2 uv = (gl_FragCoord.xy/wnd_size);
+    vec2 uv = (((gl_FragCoord.xy/wnd_size-.5)*2)*zoom)+center;
 
-    z.x = box.x + uv.x * (box.z - box.x);
-    z.y = box.y - uv.y * (box.y - box.w);
+    float zx = uv.x * R;
+    float zy = uv.y * R;
 
-    int i;
-    for (i=0; i<iter; i++) {
-        float x = (z.x * z.x - z.y * z.y) + c.x;
-        float y = (z.y * z.x + z.x * z.y) + c.y;
-
-        if ((x * x + y * y) > 4.0) break;
-        z.x = x;
-        z.y = y;
+    int i = 0;
+    while ((zx*zx+zy*zy < R*R) && (i < iter)){
+        float xtemp = zx * zx - zy * zy;
+        zy = 2 * zx * zy + c.y;
+        zx = xtemp + c.x;
+        i = i+1;
+    }
+    vec3 color = hsv2rgb(vec3(float(i)/iter, .5, .7));
+    if (i==iter){
+        fragColor = vec4(0.);
+    }
+    else {
+        fragColor = vec4(color, 1.);
     }
 
-    fragColor = vec4((i == iter ? 0.0 : float(i)) / 100.0);
 }
     #endif
 
