@@ -1,2 +1,2 @@
-# TextArt
- A few demos having fun with text
+# Visualization
+ A Collection of fun visualizations.
