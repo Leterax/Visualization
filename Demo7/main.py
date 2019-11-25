@@ -32,6 +32,7 @@ class Fractal(moderngl_window.WindowConfig):
         # self.fractal_program['time'].value = time
 
         # self.fractal_program['c'].value = (math.sin(time), math.cos(time))
+        self.zoom = ((math.sin(time / 2) + 1) / 2) * 1024 + 1
         self.fractal_program['center'].value = self.center
         self.fractal_program['zoom'].value = 1 / self.zoom
         self.quad_fs.render(self.fractal_program)
