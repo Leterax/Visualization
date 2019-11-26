@@ -1,0 +1,1 @@
+moderngl_window==2.0.4
