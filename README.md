@@ -25,3 +25,8 @@ Assembling text from small circles
 ![Voronoi](Demos/Voronoi.gif)
 
 Generate a moving voronoi diagram
+
+## PolarPrimes
+![PolarPrimes](Demos/PolarPrimes.gif)
+
+Display prime numbers in a polar coordinate system.
