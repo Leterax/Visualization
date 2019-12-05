@@ -1,4 +1,4 @@
-#version 330
+#version 400
 
 #if defined VERTEX_SHADER
 
@@ -34,14 +34,14 @@ vec3 hsv2rgb(vec3 c)
 }
 
 void main() {
-    vec2 uv = (((gl_FragCoord.xy/wnd_size-.5)*2)*zoom)+center;
+    dvec2 uv = (((gl_FragCoord.xy/wnd_size-.5)*2)*zoom)+center;
 
-    float zx = uv.x * R;
-    float zy = uv.y * R;
+    double zx = uv.x * R;
+    double zy = uv.y * R;
 
     int i = 0;
     while ((zx*zx+zy*zy < R*R) && (i < iter)){
-        float xtemp = zx * zx - zy * zy;
+        double xtemp = zx * zx - zy * zy;
         zy = 2 * zx * zy + c.y;
         zx = xtemp + c.x;
         i = i+1;

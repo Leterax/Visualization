@@ -8,8 +8,8 @@ in vec2 in_velocity;
 out vec2 out_velocity;
 
 void main() {
-    gl_Position = vec4(in_position/100., 0., 1.);
-    out_velocity = normalize(in_velocity);
+    gl_Position = vec4(in_position/*/100.*/, 0., 1.);
+    out_velocity = in_velocity;
 }
 
 

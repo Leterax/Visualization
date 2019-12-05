@@ -207,7 +207,7 @@ class Boid:
 
         for boid in boids:
             if boid != self:
-                diff = self.position - boid.position
+                diff = (self.position - boid.position) * (1 / np.linalg.norm(self.position - boid.position))
                 diff *= 1 / np.power(np.linalg.norm(self.position - boid.position), 2) * 5
                 steering_vel += diff
                 total += 1

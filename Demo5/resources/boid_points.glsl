@@ -9,8 +9,8 @@ out vec2 pos;
 out vec2 vel;
 
 void main() {
-    gl_Position = vec4(in_position, 0.0, 1.0);
-    pos = in_position;
+    gl_Position = vec4(in_position/*/100.*/, 0.0, 1.0);
+    pos = in_position; //100.;
     vel = in_velocity;
 }
 

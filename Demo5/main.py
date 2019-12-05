@@ -3,7 +3,6 @@ from pathlib import Path
 import moderngl
 import moderngl_window
 import numpy as np
-from moderngl_window.geometry import quad_fs
 from moderngl_window.opengl.vao import VAO
 
 
@@ -29,23 +28,22 @@ class Boids(moderngl_window.WindowConfig):
         self.render_boids = self.load_program('render_boids.glsl')
         self.boid_logic = self.load_program('locality_info.glsl')
         self.boid_points = self.load_program('boid_points.glsl')
-        self.debug_texture = self.load_program('texture.glsl')
+        self.view_area = self.load_program('render_view_area.glsl')
 
         self.texture_1 = self.ctx.texture(self.wnd.buffer_size, 4, dtype='f4')
-        # self.texture_2 = self.ctx.texture(self.wnd.buffer_size, 4, dtype='f4')
         self.fbo_1 = self.ctx.framebuffer(color_attachments=[self.texture_1])
-        # self.fbo_2 = self.ctx.framebuffer(color_attachments=[self.texture_2])
 
-        n = 3 ** 5  # 2**24 = 16_777_216
+        n = 50  # 3**n
         self.render_boids['size'].value = 0.01
         self.render_boids['num_boids'].value = n
 
-        positions = ((np.random.random_sample((n, 2)) - .5) * 2.) * 100
-        velocities = f(n, .75) * 2.
+        positions = ((np.random.random_sample((n, 2)) - .5) * 2.)
+        # positions = np.zeros((n, 2))
+        velocities = f(n, .75) * 0.005
         acceleration = np.zeros((n, 2))
+
         pos_vel = np.array([*zip(positions.tolist(), velocities.tolist(), acceleration.tolist())]).flatten().astype(
             'f4')
-
         self.boids_buffer_1 = self.ctx.buffer(pos_vel)
         self.boids_buffer_2 = self.ctx.buffer(reserve=pos_vel.nbytes)
 
@@ -56,9 +54,7 @@ class Boids(moderngl_window.WindowConfig):
         self.boids_vao_2.buffer(self.boids_buffer_2, '2f 2f 2f', ['in_position', 'in_velocity', 'in_acceleration'])
 
         self.boid_logic['texture0'].value = 0
-
-        self.debug = quad_fs()
-        self.debug_texture['texture0'].value = 0
+        # self.view_area['texture0'].value = 0
 
     def render(self, time, frame_time):
         # self.program['time'].value = time
@@ -68,23 +64,15 @@ class Boids(moderngl_window.WindowConfig):
         self.boids_vao_1.render(self.boid_points, mode=moderngl.POINTS)
 
         # output updated velocity
-        self.boids_vao_1.transform(self.boid_logic, self.boids_buffer_2)
+        self.boids_vao_1.transform(self.boid_logic, self.boids_buffer_2, mode=moderngl.POINTS)
         # update their positions
-        self.boids_vao_2.transform(self.move_program, self.boids_buffer_1)
+        self.boids_vao_2.transform(self.move_program, self.boids_buffer_1, mode=moderngl.POINTS)
 
         # render boids to screen
         self.wnd.fbo.use()
         self.boids_vao_1.render(self.render_boids, mode=moderngl.POINTS)
-        # if math.isnan(struct.unpack('6f', self.boids_buffer_1.read()[0:24])[0]):
-        #    print("uh oh")
-        # v = struct.unpack('6f', self.boids_buffer_1.read()[0:24])
-        # print(f"boid1: ({v[-2]:.3f}, {v[-1]:.3f})")
-        # print(f"boid2: {struct.unpack('6f', self.boids_buffer_1.read()[24:24*2])}")
-        # print(f"boid3: {struct.unpack('6f', self.boids_buffer_1.read()[24*2:24*3])}")
-        # print(f"boid4: {struct.unpack('6f', self.boids_buffer_1.read()[24*3:24*4])}")
 
-        # self.boids_vao_1, self.boids_vao_2 = self.boids_vao_2, self.boids_vao_1
-        # self.boids_buffer_1, self.boids_buffer_2 = self.boids_buffer_2, self.boids_buffer_1
+        # print(struct.unpack('4f', self.boids_buffer_1.read()[:4 * 4]))
 
 
 if __name__ == '__main__':
