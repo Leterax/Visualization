@@ -30,3 +30,7 @@ Generate a moving voronoi diagram
 ![PolarPrimes](Demos/PolarPrimes.gif)
 
 Display prime numbers in a polar coordinate system.
+
+## HSV Color Wheel
+![HSV Color Wheel](Demos/HSV.gif)
+Generate a hsv color wheel
