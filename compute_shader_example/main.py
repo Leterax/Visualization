@@ -18,7 +18,7 @@ class ComputeShaderExample(mglw.WindowConfig):
     resizable = False
     samples = 16
 
-    N = 2 ** 20
+    N = 2 ** 6
     # if `N` is below 1024 use it as the number of workers. If `N` is larger use larger worker groups
     consts = {
         "COMPUTE_SIZE": min(1024, N),
@@ -42,13 +42,15 @@ class ComputeShaderExample(mglw.WindowConfig):
 
         # generate random positions and velocities
         positions = np.random.random((self.N, 3)).astype('f4')
-        velocities = np.random.random((self.N, 3)).astype('f4') / 100.
+        velocities = np.random.random((self.N, 3)).astype('f4')
         # shift_to_center
         positions = (positions - .5) * 2.
         velocities = (velocities - .5) * 2.
         # pad to make it a vec4
-        positions = np.c_[positions, np.zeros(positions.shape[0])]
+        positions = np.c_[positions, np.ones(positions.shape[0])]
         velocities = np.c_[velocities, np.zeros(velocities.shape[0])]
+
+        velocities = velocities / 100.
 
         # generate N hsv colors
         _rgb_colors = np.array((np.arange(self.N) / self.N, np.full(self.N, .7), np.full(self.N, .5))).T
