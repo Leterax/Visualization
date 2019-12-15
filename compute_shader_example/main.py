@@ -5,8 +5,10 @@ import moderngl
 import moderngl_window as mglw
 import numpy as np
 from matplotlib.colors import hsv_to_rgb
+from moderngl_window.geometry import cube
 from moderngl_window.opengl.vao import VAO
-from moderngl_window.scene.camera import KeyboardCamera
+from pyrr.matrix44 import create_from_translation as translation
+from pyrr.matrix44 import create_perspective_projection as perspective
 
 
 class ComputeShaderExample(mglw.WindowConfig):
@@ -18,7 +20,7 @@ class ComputeShaderExample(mglw.WindowConfig):
     resizable = False
     samples = 16
 
-    N = 2 ** 6
+    N = 2 ** 7
     # if `N` is below 1024 use it as the number of workers. If `N` is larger use larger worker groups
     consts = {
         "COMPUTE_SIZE": min(1024, N),
@@ -27,18 +29,18 @@ class ComputeShaderExample(mglw.WindowConfig):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.camera = KeyboardCamera(self.wnd.keys, aspect_ratio=self.wnd.aspect_ratio)
-        self.camera.set_position(0, 0, 1)
-
-        self.ctx.point_size = 3
+        self.ctx.point_size = 5
 
         # load programs
         self.compute_shader = self.load_compute('compute_shader.glsl', self.consts)
         self.render_program = self.load_program('points.glsl')
+        self.box_program = self.load_program('box.glsl')
 
         # set projection matrices
-        self.render_program['m_projection'].write(self.camera.projection.tobytes())
-        self.render_program['m_camera'].write(self.camera.matrix.astype('f4').tobytes())
+        projection_matrix = perspective(60, self.wnd.aspect_ratio, .1, 100).astype('f4')
+        camera_matrix = translation((0, 0, -2)).astype('f4')
+        self.render_program['m_projection'].write(projection_matrix.tobytes())
+        self.render_program['m_camera'].write(camera_matrix.tobytes())
 
         # generate random positions and velocities
         positions = np.random.random((self.N, 3)).astype('f4')
@@ -76,9 +78,17 @@ class ComputeShaderExample(mglw.WindowConfig):
         self.buffer1.bind_to_storage_buffer(self._toggle)
         self.buffer2.bind_to_storage_buffer(not self._toggle)
 
+        # box vao
+        self.box = cube()
+        self.box_program['m_projection'].write(projection_matrix.tobytes())
+        self.box_program['m_camera'].write(camera_matrix.tobytes())
+
     def render(self, time, frame_time):
         self.ctx.clear(51 / 255, 51 / 255, 51 / 255)
-        self.ctx.enable_only(moderngl.DEPTH_TEST | moderngl.CULL_FACE)
+        self.ctx.enable(moderngl.BLEND)
+
+        # render the box
+        self.box.render(self.box_program, mode=moderngl.LINES)
 
         # run the compute shader
         self.compute_shader.run(group_x=self.NUM_GROUP)
@@ -89,9 +99,6 @@ class ComputeShaderExample(mglw.WindowConfig):
         self._toggle = not self._toggle
         self.buffer1.bind_to_storage_buffer(self._toggle)
         self.buffer2.bind_to_storage_buffer(not self._toggle)
-
-    def resize(self, width: int, height: int):
-        self.camera.projection.update(aspect_ratio=self.wnd.aspect_ratio)
 
     def load_compute(self, uri, consts):
         """ read gl code """
