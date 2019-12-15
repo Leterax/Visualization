@@ -1,3 +1,15 @@
+"""
+    Example of using a compute shader.
+    Bounce particles of walls.
+
+    requirements:
+     - moderngl_window
+     - pyrr
+     - matplotlib
+
+    author: Leterax
+"""
+
 from math import ceil
 from pathlib import Path
 
@@ -5,10 +17,12 @@ import moderngl
 import moderngl_window as mglw
 import numpy as np
 from matplotlib.colors import hsv_to_rgb
-from moderngl_window.geometry import cube
+from moderngl_window.geometry import bbox
 from moderngl_window.opengl.vao import VAO
+from pyrr.matrix44 import create_from_eulers as rotate
 from pyrr.matrix44 import create_from_translation as translation
 from pyrr.matrix44 import create_perspective_projection as perspective
+from pyrr.matrix44 import multiply
 
 
 class ComputeShaderExample(mglw.WindowConfig):
@@ -79,7 +93,7 @@ class ComputeShaderExample(mglw.WindowConfig):
         self.buffer2.bind_to_storage_buffer(not self._toggle)
 
         # box vao
-        self.box = cube()
+        self.box = bbox()
         self.box_program['m_projection'].write(projection_matrix.tobytes())
         self.box_program['m_camera'].write(camera_matrix.tobytes())
 
@@ -87,8 +101,15 @@ class ComputeShaderExample(mglw.WindowConfig):
         self.ctx.clear(51 / 255, 51 / 255, 51 / 255)
         self.ctx.enable(moderngl.BLEND)
 
+        # rotate and translate the camera for a smooth rotating movement
+        t = translation((0, 0, -2), dtype='f4')
+        rotation = rotate((0, 0, time / 2.), dtype='f4')
+        cam_matrix = multiply(rotation, t)
+
         # render the box
-        self.box.render(self.box_program, mode=moderngl.LINES)
+        self.render_program['m_camera'].write(cam_matrix)
+        self.box_program['m_camera'].write(cam_matrix)
+        self.box.render(self.box_program)
 
         # run the compute shader
         self.compute_shader.run(group_x=self.NUM_GROUP)
@@ -101,7 +122,7 @@ class ComputeShaderExample(mglw.WindowConfig):
         self.buffer2.bind_to_storage_buffer(not self._toggle)
 
     def load_compute(self, uri, consts):
-        """ read gl code """
+        """ read compute shader code and set consts """
         with open(self.resource_dir / uri, 'r') as fp:
             content = fp.read()
 

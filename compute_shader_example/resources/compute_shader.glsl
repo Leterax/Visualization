@@ -1,4 +1,6 @@
 // %VARIABLE% will be replaced with consts by python code
+// original code by minu jeong:
+// https://github.com/moderngl/moderngl/blob/master/examples/compute_shader_ssbo.py
 
 #version 430
 #define GROUP_SIZE 0//%COMPUTE_SIZE%

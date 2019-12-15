@@ -11,12 +11,12 @@ void main(){
 
 }
 
-    #elif defined FRAGMENT_SHADER
+#elif defined FRAGMENT_SHADER
 
 out vec4 fragColor;
 
 void main(){
 
-    fragColor = vec4(0, 1, 0, .25);
+    fragColor = vec4(0.3, 0.3, 0.3, .5);
 }
-    #endif
+#endif
