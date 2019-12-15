@@ -34,3 +34,7 @@ Display prime numbers in a polar coordinate system.
 ## HSV Color Wheel
 ![HSV Color Wheel](Demos/HSV.gif)
 Generate a hsv color wheel
+
+## ComputeShader Example
+![ComputeShader Example](Demos/compute_shader_example.gif)
+Bouncing particles done with a compute-shader
