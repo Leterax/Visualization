@@ -60,6 +60,16 @@ void main()
         p.y = 1.0 - rad;
         v.y *= -0.98;
     }
+    if (p.z - rad <= -1.0)
+    {
+        p.z = -1.0 + rad;
+        v.z *= -0.98;
+    }
+    else if (p.z + rad >= 1.0)
+    {
+        p.z = 1.0 - rad;
+        v.z *= -0.98;
+    }
 
     // slight dampening on the y-axis
     v.y += -0.001;

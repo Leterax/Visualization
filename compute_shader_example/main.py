@@ -50,9 +50,9 @@ class ComputeShaderExample(mglw.WindowConfig):
         velocities = (velocities - .5) * 2.
         # pad to make it a vec4
         positions = np.c_[positions, np.ones(positions.shape[0])]
-        velocities = np.c_[velocities, np.zeros(velocities.shape[0])]
+        velocities = np.c_[velocities, np.ones(velocities.shape[0])]
 
-        velocities = velocities / 100.
+        velocities = velocities / 75.
 
         # generate N hsv colors
         _rgb_colors = np.array((np.arange(self.N) / self.N, np.full(self.N, .7), np.full(self.N, .5))).T
