@@ -79,7 +79,7 @@ class CubeViz(mglw.WindowConfig):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.wnd.mouse_exclusivity = True
+        # self.wnd.mouse_exclusivity = True
         self.camera = KeyboardCamera(self.wnd.keys, aspect_ratio=self.wnd.aspect_ratio)
         self.camera_enabled = False
         self.render_program = self.load_program('my_shader.glsl')
