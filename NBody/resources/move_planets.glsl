@@ -9,7 +9,7 @@ layout(local_size_x=GROUP_SIZE) in;
 // our Planets have a position, velocity and color
 struct Planet
 {
-    vec4 pos;
+    dvec4 pos;
     vec4 vel;
     vec4 frc;
     vec4 col;
@@ -34,7 +34,7 @@ void main()
     // get the current Planet we want to look at
     Planet in_planet = In.planets[x];
 
-    vec3 p = in_planet.pos.xyz;
+    dvec3 p = in_planet.pos.xyz;
     vec3 v = in_planet.vel.xyz;
     vec3 f = in_planet.frc.xyz;
     float m = in_planet.vel.w;
@@ -46,12 +46,12 @@ void main()
 
     vec3 new_a = f/m*DT;
     vec3 new_v = v + new_a*DT;
-    vec3 new_p = p + new_v*DT;
+    dvec3 new_p = p + new_v*DT;
 
 
     // output the Planet into 'Out' with the same values as the in Planet
     Planet out_planet;
-    out_planet.pos.xyzw = vec4(new_p, 1.);
+    out_planet.pos.xyzw = dvec4(new_p, 1.);
     out_planet.vel.xyzw = vec4(new_v, 1.);
     out_planet.col = in_planet.col;
     out_planet.vel.w = in_planet.vel.w;

@@ -13,7 +13,7 @@ layout(local_size_x=GROUP_SIZE) in;
 // our Planets have a position, velocity and color
 struct Planet
 {
-    vec4 pos;
+    dvec4 pos;
     vec4 vel;
     vec4 frc;
     vec4 col;
@@ -38,7 +38,7 @@ void main()
     // get the current Planet we want to look at
     Planet in_planet = In.planets[x];
 
-    vec3 p = in_planet.pos.xyz;
+    dvec3 p = in_planet.pos.xyz;
     vec3 v = in_planet.vel.xyz;
     vec3 f = in_planet.frc.xyz;
     float m = in_planet.vel.w;
@@ -48,10 +48,10 @@ void main()
         Planet j = In.planets[i];
         if (j!=in_planet){
             if (length(p-j.pos.xyz) > 0.001){
-                vec3 top = G * m * j.vel.w * (p-j.pos.xyz);
-                float bottom = length(p-j.pos.xyz);
+                dvec3 top = G * m * j.vel.w * (p-j.pos.xyz);
+                double bottom = length(p-j.pos.xyz);
                 bottom = bottom*bottom*bottom;
-                f_i += top/bottom;
+                f_i += vec3(top/bottom);
             }
         }
     }
@@ -62,7 +62,7 @@ void main()
     out_planet.pos.xyzw = in_planet.pos;
     out_planet.vel.xyzw = in_planet.vel;
     out_planet.col = in_planet.col;
-    out_planet.frc = vec4(-f_i, 1.);
+    out_planet.frc = vec4(-0.,0.,0., 1.);
 
     Out.planets[x] = out_planet;
 }

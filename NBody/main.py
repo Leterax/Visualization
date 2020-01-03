@@ -32,7 +32,7 @@ uranus = {"location": (0, 2.8e12, 0), "mass": 8.7e25, "velocity": (6835, 0, 0)}
 neptune = {"location": (0, 4.5e12, 0), "mass": 1e26, "velocity": (5477, 0, 0)}
 pluto = {"location": (0, 3.7e12, 0), "mass": 1.3e22, "velocity": (4748, 0, 0)}
 
-planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune]
+planets = [sun]  # , mercury, venus, earth, mars, jupiter, saturn, uranus, neptune
 
 
 class NBodySim(mglw.WindowConfig):
@@ -96,15 +96,16 @@ class NBodySim(mglw.WindowConfig):
         colors = np.c_[colors, np.ones(colors.shape[0])]
 
         # interleave data
-        interleaved = np.c_[positions, velocities, force, colors].flatten().astype('f4')
+        interleaved = np.c_[positions, velocities, force, colors].flatten().astype('f4').tolist()
+        interleaved = struct.pack('4d4f4f4f' * (len(interleaved) // 16), *interleaved)
 
         # create two buffers to switch between
         self.buffer1 = self.ctx.buffer(interleaved)
-        self.buffer2 = self.ctx.buffer(reserve=interleaved.nbytes)
+        self.buffer2 = self.ctx.buffer(reserve=len(interleaved))
 
         # create a VAO with buffer 1 bound to it to render the balls
         self.render_vao = VAO(name='render_vao')
-        self.render_vao.buffer(self.buffer2, '4f 4f 4f 4f', ['in_position', 'in_velocity', 'in_force', 'in_color'])
+        self.render_vao.buffer(self.buffer2, '4f8 4f 4f 4f', ['in_position', 'in_velocity', 'in_force', 'in_color'])
 
         # bind the buffers to 1 and 0 respectively
         self._toggle = False
@@ -117,11 +118,11 @@ class NBodySim(mglw.WindowConfig):
 
         # render the result to the screen
         # position
-        print(struct.unpack('4f', self.buffer1.read()[:4 * 4]))
-        # velocity and mass
-        print(struct.unpack('4f', self.buffer1.read()[4 * 4:4 * 4 * 2]))
-        # force
-        print(struct.unpack('4f', self.buffer1.read()[4 * 4 * 2:4 * 4 * 3]))
+        print(struct.unpack('4d', self.buffer1.read()[:4 * 8]))
+        # # velocity and mass
+        # print(struct.unpack('4f', self.buffer1.read()[4 * 4:4 * 4 * 2]))
+        # # force
+        # print(struct.unpack('4f', self.buffer1.read()[4 * 4 * 2:4 * 4 * 3]))
         self.render_vao.render(self.render_program, mode=moderngl.POINTS)
 
         # run the compute shader
