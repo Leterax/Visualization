@@ -2,7 +2,7 @@
 
 #version 430
 #define GROUP_SIZE 0//%COMPUTE_SIZE%
-#define _DT 0//%DT%lf
+#define DT 0//%DT%lf
 
 layout(local_size_x=GROUP_SIZE) in;
 
@@ -44,14 +44,15 @@ void main()
     // F/m = a
     // v = a*dt
     // s = v*dt
-
+    //f = dvec3(0.);
     dvec3 new_a = (f/m)*DT;
     dvec3 new_v = v + new_a*DT;
     dvec3 new_p = p + new_v*DT;
 
 
     // output the Planet into 'Out' with the same values as the in Planet
-    Planet out_planet = Planet(new_p, new_v, in_planet.frc, in_planet.mass, in_planet.col);
+    //    Planet out_planet = Planet(new_p, new_v, in_planet.frc, in_planet.mass, in_planet.col);
+    Planet out_planet = Planet(dvec3(0.), dvec3(1.), dvec3(0.), 0f, vec4(0.));
 
 
     Out.planets[x] = out_planet;

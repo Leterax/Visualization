@@ -119,11 +119,13 @@ class NBodySim(mglw.WindowConfig):
         interleaved = [item for l in interleaved for sublist in l for item in sublist]
 
         print(len(interleaved))
-        interleaved = struct.pack('9d5f' * len(planets), *interleaved)
+        interleaved = struct.pack('<9d5f' * len(planets), *interleaved)
+        print(interleaved)
         print(len(interleaved))
         # create two buffers to switch between
         self.buffer1 = self.ctx.buffer(interleaved)
-        self.buffer2 = self.ctx.buffer(reserve=len(interleaved))
+        # self.buffer2 = self.ctx.buffer(reserve=len(interleaved))
+        self.buffer2 = self.ctx.buffer(interleaved)
 
         # create a VAO with buffer 1 bound to it to render the balls
         self.render_vao = VAO(name='render_vao')
@@ -140,17 +142,23 @@ class NBodySim(mglw.WindowConfig):
         self.ctx.enable(moderngl.BLEND)
 
         # position
-        if time % 1 < 0.01:
+        #if (time % 1) < 0.01:
+        if True:
             offset = 0
             print(struct.unpack('3d', self.buffer1.read()[offset:offset + 3 * 8]))
+            print(struct.unpack('3d', self.buffer2.read()[offset:offset + 3 * 8]))
             offset += 3 * 8
             print(struct.unpack('3d', self.buffer1.read()[offset:offset + 3 * 8]))
+            print(struct.unpack('3d', self.buffer2.read()[offset:offset + 3 * 8]))
             offset += 3 * 8
             print(struct.unpack('3d', self.buffer1.read()[offset:offset + 3 * 8]))
+            print(struct.unpack('3d', self.buffer2.read()[offset:offset + 3 * 8]))
             offset += 3 * 8
             print(struct.unpack('1f', self.buffer1.read()[offset:offset + 4]))
+            print(struct.unpack('1f', self.buffer2.read()[offset:offset + 4]))
             offset += 4
             print(struct.unpack('4f', self.buffer1.read()[offset:offset + 4 * 4]))
+            print(struct.unpack('4f', self.buffer2.read()[offset:offset + 4 * 4]))
             print("=================")
 
         # render the result to the screen
