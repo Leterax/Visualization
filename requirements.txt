@@ -2,4 +2,4 @@ pyrr
 matplotlib
 numpy
 moderngl
-moderngl_window==2.0.4
+moderngl_window==2.0.5

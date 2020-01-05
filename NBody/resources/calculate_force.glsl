@@ -5,7 +5,6 @@
 
 #define N 0//%N%
 #define G 6.67408e-11
-#define E 0//%E%
 
 
 layout(local_size_x=GROUP_SIZE) in;
@@ -13,9 +12,10 @@ layout(local_size_x=GROUP_SIZE) in;
 // our Planets have a position, velocity and color
 struct Planet
 {
-    dvec4 pos;
-    vec4 vel;
-    vec4 frc;
+    dvec3 pos;
+    dvec3 vel;
+    dvec3 frc;
+    float mass;
     vec4 col;
 };
 
@@ -38,31 +38,27 @@ void main()
     // get the current Planet we want to look at
     Planet in_planet = In.planets[x];
 
-    dvec3 p = in_planet.pos.xyz;
-    vec3 v = in_planet.vel.xyz;
-    vec3 f = in_planet.frc.xyz;
-    float m = in_planet.vel.w;
+    dvec3 f_i = vec3(0.);
 
-    vec3 f_i = vec3(0.);
     for (int i=0; i <= N; i++){
         Planet j = In.planets[i];
         if (j!=in_planet){
-            if (length(p-j.pos.xyz) > 0.001){
-                dvec3 top = G * m * j.vel.w * (p-j.pos.xyz);
-                double bottom = length(p-j.pos.xyz);
+            dvec3 dst_vec = in_planet.pos.xyz-j.pos;
+
+            if (length(dst_vec) > 0.001){
+                dvec3 top = G * in_planet.mass * j.mass * dst_vec;
+                double bottom = length(dst_vec);
+
                 bottom = bottom*bottom*bottom;
-                f_i += vec3(top/bottom);
+
+                f_i += dvec3(top/bottom);
             }
         }
     }
 
-
+    f_i = dvec3(1, 2, 3);
     // output the Planet into 'Out' with the same values as the in Planet
-    Planet out_planet;
-    out_planet.pos.xyzw = in_planet.pos;
-    out_planet.vel.xyzw = in_planet.vel;
-    out_planet.col = in_planet.col;
-    out_planet.frc = vec4(-0.,0.,0., 1.);
+    Planet out_planet = Planet(in_planet.pos, in_planet.vel, in_planet.frc, in_planet.mass, in_planet.col);
 
     Out.planets[x] = out_planet;
 }

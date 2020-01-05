@@ -1,6 +1,5 @@
 """
-    Example of using a compute shader.
-    Bounce particles of walls.
+    N-Body Simulation
 
     requirements:
      - moderngl_window
@@ -32,7 +31,11 @@ uranus = {"location": (0, 2.8e12, 0), "mass": 8.7e25, "velocity": (6835, 0, 0)}
 neptune = {"location": (0, 4.5e12, 0), "mass": 1e26, "velocity": (5477, 0, 0)}
 pluto = {"location": (0, 3.7e12, 0), "mass": 1.3e22, "velocity": (4748, 0, 0)}
 
-planets = [sun]  # , mercury, venus, earth, mars, jupiter, saturn, uranus, neptune
+A = {"location": (0, 0, 0), "mass": 10, "velocity": (0, 0, 0), "force": (0, 0, 0)}
+B = {"location": (8, 9, 10), "mass": 17, "velocity": (11, 12, 13), "force": (14, 15, 16)}
+
+# planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune]
+planets = [A]
 
 
 class NBodySim(mglw.WindowConfig):
@@ -49,9 +52,9 @@ class NBodySim(mglw.WindowConfig):
     consts = {
         "COMPUTE_SIZE": min(1024, N),
         "N": N,
-        "E": 0.1 ** 2.,
-        "DT": 24 * 60 * 60
+        "DT": .1
     }
+
     NUM_GROUP = int(ceil(N / 1024))
 
     def __init__(self, **kwargs):
@@ -66,46 +69,66 @@ class NBodySim(mglw.WindowConfig):
 
         # set projection matrices
         projection_matrix = perspective(60, self.wnd.aspect_ratio, .1, 7e15).astype('f4')
-        camera_matrix = translation((0, 0, -1e13)).astype('f4')
+        camera_matrix = translation((0, 0, -1e2)).astype('f4')
         self.render_program['m_projection'].write(projection_matrix.tobytes())
         self.render_program['m_camera'].write(camera_matrix.tobytes())
 
-        # generate random positions and velocities
-        positions = np.random.random((self.N, 3)).astype('f4')
-        velocities = np.random.random((self.N, 3)).astype('f4')
-        force = np.zeros((self.N, 3)).astype('f4')
-        # shift_to_center
-        positions = (positions - .5) * 2.
-        velocities = (velocities - .5) * 2.
-        # pad to make it a vec4
-        positions = np.c_[positions, np.ones(positions.shape[0])]
-        velocities = np.c_[velocities, np.ones(velocities.shape[0]) * 100.]
-        force = np.c_[force, np.ones(force.shape[0])]
+        generate_random = False
 
-        for index, planet in enumerate(planets):
-            velocities[index] = (*planet['velocity'], planet['mass'])
-            positions[index] = (*planet['location'], 1)
+        if generate_random:
+            # generate random positions and velocities
+            positions = np.random.random((self.N, 3)).astype('f4')
+            velocities = np.random.random((self.N, 3)).astype('f4')
+            mass = np.random.random((self.N, 1)).astype('f4')
 
-        # print(positions)
+            # shift_to_center
+            positions = (positions - .5) * 2.
+            velocities = (velocities - .5) * 2.
+            # # pad to make it a vec4
+            # positions = np.c_[positions, np.ones(positions.shape[0])]
+            # velocities = np.c_[velocities, np.ones(velocities.shape[0]) * 100.]
+
+            force = np.zeros((self.N, 3)).astype('f4')
+            # force = np.c_[force, np.ones(force.shape[0])]
+
+        else:
+            # use predefined values
+            positions = np.empty((self.N, 3)).astype('f4')
+            velocities = np.empty((self.N, 3)).astype('f4')
+
+            force = np.empty((self.N, 3)).astype('f4')
+            # force = np.c_[force, np.ones(force.shape[0])]
+            mass = np.empty((self.N, 1)).astype('f4')
+
+            for index, planet in enumerate(planets):
+                velocities[index] = planet['velocity']
+                positions[index] = planet['location']
+                force[index] = planet['force']
+                mass[index] = planet['mass']
 
         # generate N hsv colors
         _rgb_colors = np.array((np.arange(self.N) / self.N, np.full(self.N, .7), np.full(self.N, .5))).T
         # convert to grb
         colors = hsv_to_rgb(_rgb_colors).astype('f4')
-        # reshape into vec4; [h, s, v] -> [h, s, v, 0.]
+        # reshape into vec4; [h, s, v] -> [h, s, v, 1.]
         colors = np.c_[colors, np.ones(colors.shape[0])]
 
         # interleave data
-        interleaved = np.c_[positions, velocities, force, colors].flatten().astype('f4').tolist()
-        interleaved = struct.pack('4d4f4f4f' * (len(interleaved) // 16), *interleaved)
+        # interleaved = np.c_[positions, velocities, force, colors].flatten().astype('f4').tolist()
+        interleaved = list(zip(positions.tolist(), velocities.tolist(), force.tolist(), mass.tolist(), colors.tolist()))
+        interleaved = [item for l in interleaved for sublist in l for item in sublist]
 
+        print(len(interleaved))
+        interleaved = struct.pack('9d5f' * len(planets), *interleaved)
+        print(len(interleaved))
         # create two buffers to switch between
         self.buffer1 = self.ctx.buffer(interleaved)
         self.buffer2 = self.ctx.buffer(reserve=len(interleaved))
 
         # create a VAO with buffer 1 bound to it to render the balls
         self.render_vao = VAO(name='render_vao')
-        self.render_vao.buffer(self.buffer2, '4f8 4f 4f 4f', ['in_position', 'in_velocity', 'in_force', 'in_color'])
+        self.render_vao.buffer(self.buffer1, '3f8 3f8 3f8 1f 4f',
+                               ['in_position', 'in_velocity', 'in_force', 'in_mass', 'in_color'])
 
         # bind the buffers to 1 and 0 respectively
         self._toggle = False
@@ -116,29 +139,39 @@ class NBodySim(mglw.WindowConfig):
         self.ctx.clear(51 / 255, 51 / 255, 51 / 255)
         self.ctx.enable(moderngl.BLEND)
 
-        # render the result to the screen
         # position
-        print(struct.unpack('4d', self.buffer1.read()[:4 * 8]))
-        # # velocity and mass
-        # print(struct.unpack('4f', self.buffer1.read()[4 * 4:4 * 4 * 2]))
-        # # force
-        # print(struct.unpack('4f', self.buffer1.read()[4 * 4 * 2:4 * 4 * 3]))
+        if time % 1 < 0.01:
+            offset = 0
+            print(struct.unpack('3d', self.buffer1.read()[offset:offset + 3 * 8]))
+            offset += 3 * 8
+            print(struct.unpack('3d', self.buffer1.read()[offset:offset + 3 * 8]))
+            offset += 3 * 8
+            print(struct.unpack('3d', self.buffer1.read()[offset:offset + 3 * 8]))
+            offset += 3 * 8
+            print(struct.unpack('1f', self.buffer1.read()[offset:offset + 4]))
+            offset += 4
+            print(struct.unpack('4f', self.buffer1.read()[offset:offset + 4 * 4]))
+            print("=================")
+
+        # render the result to the screen
         self.render_vao.render(self.render_program, mode=moderngl.POINTS)
+        # # run the compute shader
+        # self.calculate_force.run(group_x=self.NUM_GROUP)
+        #
+        # # swap buffers
+        # self._toggle = not self._toggle
+        # self.buffer1.bind_to_storage_buffer(self._toggle)
+        # self.buffer2.bind_to_storage_buffer(not self._toggle)
 
         # run the compute shader
-        self.calculate_force.run(group_x=self.NUM_GROUP)
-
-        # swap buffers
-        self._toggle = not self._toggle
-        self.buffer1.bind_to_storage_buffer(self._toggle)
-        self.buffer2.bind_to_storage_buffer(not self._toggle)
-
         self.move_planets.run(group_x=self.NUM_GROUP)
 
         # swap buffers
         self._toggle = not self._toggle
         self.buffer1.bind_to_storage_buffer(self._toggle)
         self.buffer2.bind_to_storage_buffer(not self._toggle)
+
+        # input()
 
     def load_compute(self, uri, consts):
         """ read compute shader code and set consts """
