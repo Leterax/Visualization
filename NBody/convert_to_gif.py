@@ -56,4 +56,4 @@ class SaveToFile:
         imageio.mimsave(f"simulation-{self.folder}-{time.time()}.gif", images, fps=self.fps)
 
 
-file_saver = SaveToFile('three_bodies', 600, 'mp4')
+file_saver = SaveToFile('uniform100', 30, 'gif')
