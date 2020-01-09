@@ -11,12 +11,8 @@ uniform mat4 m_projection;
 uniform mat4 m_camera;
 
 void main(){
+    color = in_color;
     gl_Position = m_projection * m_camera * vec4(vec3(in_position.xyz), 1.);
-
-    color = vec4(in_color);
-
-
-
 }
 
 #elif defined FRAGMENT_SHADER

@@ -124,3 +124,7 @@ dmypy.json
 
 # PyCharm
 .idea/
+
+# Screen Recordings
+NBody/*.mp4
+NBody/*.gif
