@@ -16,7 +16,7 @@ import moderngl
 import moderngl_window as mglw
 import numpy as np
 from matplotlib.colors import hsv_to_rgb
-from moderngl_window.geometry import bbox
+from moderngl_window.geometry import bbox, sphere
 from moderngl_window.opengl.vao import VAO
 from pyrr.matrix44 import create_from_eulers as rotate
 from pyrr.matrix44 import create_from_translation as translation
@@ -33,7 +33,7 @@ class ComputeShaderExample(mglw.WindowConfig):
     resizable = False
     samples = 16
 
-    N = 2 ** 9
+    N = 2 ** 3
     # if `N` is below 1024 use it as the number of workers. If `N` is larger use larger worker groups
     consts = {
         "COMPUTE_SIZE": min(1024, N),
@@ -47,6 +47,7 @@ class ComputeShaderExample(mglw.WindowConfig):
         # load programs
         self.compute_shader = self.load_compute('compute_shader.glsl', self.consts)
         self.render_program = self.load_program('points.glsl')
+        self.render_program = self.load_program('balls.glsl')
         self.box_program = self.load_program('box.glsl')
 
         # set projection matrices
@@ -83,8 +84,10 @@ class ComputeShaderExample(mglw.WindowConfig):
         self.buffer2 = self.ctx.buffer(reserve=pos_vel_color.nbytes)
 
         # create a VAO with buffer 1 bound to it to render the balls
-        self.render_vao = VAO(name='render_vao')
-        self.render_vao.buffer(self.buffer1, '4f 4f 4f', ['in_position', 'in_velocity', 'in_color'])
+        self.ball = sphere(radius=.01)
+        self.ball.buffer(self.buffer1, '4f 4f 4f/i', ['ball_position', 'ball_velocity', 'ball_color'])
+        # self.render_vao = VAO(name='render_vao')
+        # self.render_vao.buffer(self.buffer1, '4f 4f 4f', ['in_position', 'in_velocity', 'in_color'])
 
         # bind the buffers to 1 and 0 respectively
         self._toggle = False
@@ -113,7 +116,8 @@ class ComputeShaderExample(mglw.WindowConfig):
         # run the compute shader
         self.compute_shader.run(group_x=self.NUM_GROUP)
         # render the result to the screen
-        self.render_vao.render(self.render_program, mode=moderngl.POINTS)
+        self.ball.render(self.render_program, instances=self.N)
+        # self.render_vao.render(self.render_program, mode=moderngl.POINTS)
 
         # swap buffers
         self._toggle = not self._toggle
