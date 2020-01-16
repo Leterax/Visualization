@@ -1,18 +1,17 @@
 // %VARIABLE% will be replaced with consts by python code
-// original code by minu jeong:
-// https://github.com/moderngl/moderngl/blob/master/examples/compute_shader_ssbo.py
 
 #version 430
 #define GROUP_SIZE 0//%COMPUTE_SIZE%
+#define BALL_SIZE 0//%BALL_SIZE%
+#define BOX_SIZE 0//%BOX_SIZE%
 
 layout(local_size_x=GROUP_SIZE) in;
 
 // our balls have a position, velocity and color
 struct Ball
 {
-    vec4 pos;
-    vec4 vel;
-    vec4 col;
+    float posx; float posy; float posz;
+    float velx; float vely; float velz;
 };
 
 // input from the buffer bound to 0
@@ -34,54 +33,24 @@ void main()
     // get the current ball we want to look at
     Ball in_ball = In.balls[x];
 
-    vec4 p = in_ball.pos.xyzw;
-    vec4 v = in_ball.vel.xyzw;
+    vec3 p = vec3(in_ball.posx, in_ball.posy, in_ball.posz);
+    vec3 v = vec3(in_ball.velx, in_ball.vely, in_ball.velz);
     // update its position based on its velocity
-    p.xy += v.xy;
+    p += v;
 
-    float rad = p.w * 0.5;
-
-    // bounce of all the walls
-    if (p.x - rad <= -1.0)
-    {
-        p.x = -1.0 + rad;
-        v.x *= -0.98;
+    // we assume the box is centerd around (0,0,0)
+    if (p.x - BALL_SIZE < -BOX_SIZE || p.x + BALL_SIZE > BOX_SIZE){
+        v.x *= -.98;
     }
-    else if (p.x + rad >= 1.0)
-    {
-        p.x = 1.0 - rad;
-        v.x *= -0.98;
-    }
-    if (p.y - rad <= -1.0)
-    {
-        p.y = -1.0 + rad;
-        v.y *= -0.98;
-    }
-    else if (p.y + rad >= 1.0)
-    {
-        p.y = 1.0 - rad;
-        v.y *= -0.98;
-    }
-    if (p.z - rad <= -1.0)
-    {
-        p.z = -1.0 + rad;
-        v.z *= -0.98;
-    }
-    else if (p.z + rad >= 1.0)
-    {
-        p.z = 1.0 - rad;
-        v.z *= -0.98;
+    if (p.y - BALL_SIZE < -BOX_SIZE || p.y + BALL_SIZE > BOX_SIZE){
+        v.y *= -.98;
     }
 
-    // slight dampening on the y-axis
-    v.y += -0.001;
+    if (p.z - BALL_SIZE < -BOX_SIZE || p.z + BALL_SIZE > BOX_SIZE){
+        v.z *= -.98;
+    }
 
     // output the ball into 'Out' with the same values as the in ball
-    Ball out_ball;
-    out_ball.pos.xyzw = p.xyzw;
-    out_ball.vel.xyzw = v.xyzw;
-    vec4 c = in_ball.col.xyzw;
-    out_ball.col.xyzw = c.xyzw;
-
-    Out.balls[x] = out_ball;
+    Out.balls[x] = Ball(p.x, p.y, p.z,
+    v.x, v.y, v.z);
 }
