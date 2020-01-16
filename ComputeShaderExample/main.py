@@ -23,6 +23,11 @@ from pyrr.matrix44 import create_perspective_projection as perspective
 from pyrr.matrix44 import multiply
 
 
+def calculate_ball_size(box_size, n):
+    # we want about 25% of the cube to be filled with balls
+    return (np.power(3 / (2 * np.pi), 1 / 3) * box_size) / (2 * np.power(n, 1 / 3))
+
+
 class ComputeShaderExample(mglw.WindowConfig):
     gl_version = (4, 3)
     title = "ComputeShader Example"
@@ -30,14 +35,16 @@ class ComputeShaderExample(mglw.WindowConfig):
     aspect_ratio = None
     window_size = 1280, 720
     resizable = False
-    samples = 2
+    samples = 4
 
-    N = 256
-    # if `N` is below 64 use it as the number of workers. If `N` is larger use larger worker groups
+    N = 10000
+    BOX_SIZE = 1.
+    BALL_SIZE = calculate_ball_size(BOX_SIZE, N)
     consts = {
+        # if `N` is below 64 use it as the number of workers. If `N` is larger use larger worker groups
         "COMPUTE_SIZE": min(64, N),
-        "BALL_SIZE": .01,
-        "BOX_SIZE": .5,
+        "BALL_SIZE": BALL_SIZE,
+        "BOX_SIZE": BOX_SIZE,
     }
     NUM_GROUP = int(ceil(N / 64))
 
@@ -52,9 +59,9 @@ class ComputeShaderExample(mglw.WindowConfig):
 
         # set projection matrices
         projection_matrix = perspective(60, self.wnd.aspect_ratio, .1, 100).astype('f4')
-        camera_matrix = translation((0, 0, -2)).astype('f4')
+        self.camera_matrix = translation((0, 0, -4 * self.BOX_SIZE)).astype('f4')
         self.render_program['m_projection'].write(projection_matrix.tobytes())
-        self.render_program['m_camera'].write(camera_matrix.tobytes())
+        self.render_program['m_camera'].write(self.camera_matrix.tobytes())
 
         # generate random positions and velocities
         pos_vel = self.generate_data()
@@ -72,7 +79,8 @@ class ComputeShaderExample(mglw.WindowConfig):
         self.colors = self.ctx.buffer(colors.astype('f4'))
 
         # create a VAO with buffer 1 bound to it to render the balls
-        self.ball = sphere(radius=.01, rings=4, sectors=4)
+        rings_sectors_count = max(1, int(16 - .0005 * self.N))  # some number between 1 and 16
+        self.ball = sphere(radius=self.BALL_SIZE, rings=rings_sectors_count, sectors=rings_sectors_count)
         self.ball.buffer(self.buffer1, '3f 3f/i', ['ball_position', 'ball_velocity'])
         self.ball.buffer(self.colors, '4f/i', ['ball_color'])
 
@@ -82,18 +90,17 @@ class ComputeShaderExample(mglw.WindowConfig):
         self.buffer2.bind_to_storage_buffer(not self._toggle)
 
         # box vao
-        self.box = bbox()
+        self.box = bbox(size=(self.BOX_SIZE * 2, self.BOX_SIZE * 2, self.BOX_SIZE * 2))
         self.box_program['m_projection'].write(projection_matrix.tobytes())
-        self.box_program['m_camera'].write(camera_matrix.tobytes())
+        self.box_program['m_camera'].write(self.camera_matrix.tobytes())
 
     def render(self, time, frame_time):
         self.ctx.clear(51 / 255, 51 / 255, 51 / 255)
         self.ctx.enable(moderngl.BLEND)
 
         # rotate and translate the camera for a smooth rotating movement
-        t = translation((0, 0, -2), dtype='f4')
         rotation = rotate((0, 0, time / 3.), dtype='f4')
-        cam_matrix = multiply(rotation, t)
+        cam_matrix = multiply(rotation, self.camera_matrix)
 
         # render the box
         self.render_program['m_camera'].write(cam_matrix)
