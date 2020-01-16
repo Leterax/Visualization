@@ -37,7 +37,7 @@ class ComputeShaderExample(mglw.WindowConfig):
     resizable = False
     samples = 4
 
-    N = 10000
+    N = int(1e6)
     BOX_SIZE = 1.
     BALL_SIZE = calculate_ball_size(BOX_SIZE, N)
     consts = {
@@ -79,7 +79,7 @@ class ComputeShaderExample(mglw.WindowConfig):
         self.colors = self.ctx.buffer(colors.astype('f4'))
 
         # create a VAO with buffer 1 bound to it to render the balls
-        rings_sectors_count = max(1, int(16 - .0005 * self.N))  # some number between 1 and 16
+        rings_sectors_count = max(4, int(16 - .0005 * self.N))  # some number between 4 and 16
         self.ball = sphere(radius=self.BALL_SIZE, rings=rings_sectors_count, sectors=rings_sectors_count)
         self.ball.buffer(self.buffer1, '3f 3f/i', ['ball_position', 'ball_velocity'])
         self.ball.buffer(self.colors, '4f/i', ['ball_color'])
