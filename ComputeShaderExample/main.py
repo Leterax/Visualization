@@ -37,8 +37,11 @@ class ComputeShaderExample(mglw.WindowConfig):
     resizable = False
     samples = 4
 
+    # number of balls
     N = int(1e6)
-    BOX_SIZE = 1.
+    # size of the bounding box
+    BOX_SIZE = 100.
+    # calculated dynamically
     BALL_SIZE = calculate_ball_size(BOX_SIZE, N)
     consts = {
         # if `N` is below 64 use it as the number of workers. If `N` is larger use larger worker groups
@@ -47,6 +50,9 @@ class ComputeShaderExample(mglw.WindowConfig):
         "BOX_SIZE": BOX_SIZE,
     }
     NUM_GROUP = int(ceil(N / 64))
+
+    # max speed of the balls
+    SPEED = 1
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -58,7 +64,7 @@ class ComputeShaderExample(mglw.WindowConfig):
         self.box_program = self.load_program('box.glsl')
 
         # set projection matrices
-        projection_matrix = perspective(60, self.wnd.aspect_ratio, .1, 100).astype('f4')
+        projection_matrix = perspective(60, self.wnd.aspect_ratio, .1, 1000).astype('f4')
         self.camera_matrix = translation((0, 0, -4 * self.BOX_SIZE)).astype('f4')
         self.render_program['m_projection'].write(projection_matrix.tobytes())
         self.render_program['m_camera'].write(self.camera_matrix.tobytes())
@@ -129,11 +135,10 @@ class ComputeShaderExample(mglw.WindowConfig):
         return self.ctx.compute_shader(content)
 
     def generate_data(self):
-        positions = (np.random.random((self.N, 3)) - .5) / 2.
-        velocities = (np.random.random((self.N, 3)) - .5) * (.75 / .5)
-        velocities[velocities < 0] -= 1 - .75
-        velocities[velocities > 0] += 1 - .75
-        velocities /= 100.
+        # balls start in the center of the box, add `*2` to the end for them to start everywhere
+        positions = (np.random.random((self.N, 3)) - .5) * self.BOX_SIZE
+        velocities = (np.random.random((self.N, 3)) - .5)
+        velocities *= self.SPEED
         return np.column_stack((positions, velocities)).flatten().astype('f4')
 
 
