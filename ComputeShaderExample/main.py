@@ -1,30 +1,42 @@
 """
-    Example of using a compute shader.
-    Bounce particles of walls.
+Example of using a compute shader.
 
-    requirements:
-     - moderngl_window
-     - pyrr
-     - matplotlib
+Bounce particles of walls.
 
-    author: Leterax
+requirements:
+ - moderngl_window
+ - pyrr
+ - matplotlib
+
+author: Leterax
 """
 from math import ceil
 from pathlib import Path
 
-import moderngl
-import moderngl_window as mglw
-import numpy as np
 from matplotlib.colors import hsv_to_rgb
+
+import moderngl
+
+import moderngl_window as mglw
 from moderngl_window.geometry import bbox, sphere
-from pyrr.matrix44 import create_from_eulers as rotate
-from pyrr.matrix44 import create_from_translation as translation
-from pyrr.matrix44 import create_perspective_projection as perspective
-from pyrr.matrix44 import multiply
+
+import numpy as np
+
+from pyrr.matrix44 import (create_from_eulers as rotate,
+                           create_from_translation as translation,
+                           create_perspective_projection as perspective,
+                           multiply)
 
 
-def calculate_ball_size(box_size, n):
-    # we want about 25% of the cube to be filled with balls
+def calculate_ball_size(box_size: float, n: float) -> float:
+    """
+    Calculate the balls size dynamically, based on the box_size and number of balls.
+
+    We want about 25% of the cube to be filled with balls
+    :param box_size: size of the box the balls are contained in
+    :param n: number of balls
+    :return: [float] size of balls
+    """
     return (np.power(3 / (2 * np.pi), 1 / 3) * box_size) / (2 * np.power(n, 1 / 3))
 
 
@@ -38,13 +50,14 @@ class ComputeShaderExample(mglw.WindowConfig):
     samples = 4
 
     # number of balls
-    N = int(1e6)
+    N = int(5e2)
     # size of the bounding box
     BOX_SIZE = 100.
     # calculated dynamically
     BALL_SIZE = calculate_ball_size(BOX_SIZE, N)
     consts = {
-        # if `N` is below 64 use it as the number of workers. If `N` is larger use larger worker groups
+        # if `N` is below 64 use it as the number of workers.
+        # if `N` is larger use larger worker groups
         "COMPUTE_SIZE": min(64, N),
         "BALL_SIZE": BALL_SIZE,
         "BOX_SIZE": BOX_SIZE,
@@ -52,9 +65,9 @@ class ComputeShaderExample(mglw.WindowConfig):
     NUM_GROUP = int(ceil(N / 64))
 
     # max speed of the balls
-    SPEED = 1
+    SPEED = 2
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
         # load programs
@@ -72,7 +85,13 @@ class ComputeShaderExample(mglw.WindowConfig):
         # generate random positions and velocities
         pos_vel = self.generate_data()
         # generate N hsv colors
-        _rgb_colors = np.array((np.arange(self.N) / self.N, np.full(self.N, .7), np.full(self.N, .5))).T
+        _rgb_colors = np.array(
+            (
+                np.arange(self.N) / self.N,
+                np.full(self.N, .7),
+                np.full(self.N, .5)
+            )
+        ).T
         # convert to grb
         colors = hsv_to_rgb(_rgb_colors)
         # reshape into vec4; [h, s, v] -> [h, s, v, 0.]
@@ -85,8 +104,13 @@ class ComputeShaderExample(mglw.WindowConfig):
         self.colors = self.ctx.buffer(colors.astype('f4'))
 
         # create a VAO with buffer 1 bound to it to render the balls
-        rings_sectors_count = max(4, int(16 - .0005 * self.N))  # some number between 4 and 16
-        self.ball = sphere(radius=self.BALL_SIZE, rings=rings_sectors_count, sectors=rings_sectors_count)
+
+        # some number between 4 and 16
+        rings_sectors_count = max(4, int(16 - .0005 * self.N))
+
+        self.ball = sphere(radius=self.BALL_SIZE,
+                           rings=rings_sectors_count,
+                           sectors=rings_sectors_count)
         self.ball.buffer(self.buffer1, '3f 3f/i', ['ball_position', 'ball_velocity'])
         self.ball.buffer(self.colors, '4f/i', ['ball_color'])
 
@@ -100,9 +124,9 @@ class ComputeShaderExample(mglw.WindowConfig):
         self.box_program['m_projection'].write(projection_matrix.tobytes())
         self.box_program['m_camera'].write(self.camera_matrix.tobytes())
 
-    def render(self, time, frame_time):
+    def render(self, time: float, frame_time: float) -> None:
         self.ctx.clear(51 / 255, 51 / 255, 51 / 255)
-        self.ctx.enable(moderngl.BLEND)
+        self.ctx.enable(moderngl.DEPTH_TEST | moderngl.CULL_FACE)
 
         # rotate and translate the camera for a smooth rotating movement
         rotation = rotate((0, 0, time / 3.), dtype='f4')
@@ -123,8 +147,8 @@ class ComputeShaderExample(mglw.WindowConfig):
         self.buffer1.bind_to_storage_buffer(self._toggle)
         self.buffer2.bind_to_storage_buffer(not self._toggle)
 
-    def load_compute(self, uri, consts):
-        """ read compute shader code and set consts """
+    def load_compute(self, uri: str, consts: dict) -> moderngl.ComputeShader:
+        """Read compute shader code and set consts."""
         with open(self.resource_dir / uri, 'r') as fp:
             content = fp.read()
 
@@ -134,8 +158,9 @@ class ComputeShaderExample(mglw.WindowConfig):
 
         return self.ctx.compute_shader(content)
 
-    def generate_data(self):
-        # balls start in the center of the box, add `*2` to the end for them to start everywhere
+    def generate_data(self) -> np.array:
+        # balls start in the center of the box,
+        # add `*2` to the end for them to start everywhere
         positions = (np.random.random((self.N, 3)) - .5) * self.BOX_SIZE
         velocities = (np.random.random((self.N, 3)) - .5)
         velocities *= self.SPEED
