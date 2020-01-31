@@ -1,16 +1,20 @@
 import math
 from pathlib import Path
+from typing import Tuple
 
 import moderngl
+
 import moderngl_window as mglw
-import numpy as np
 from moderngl_window import geometry
 from moderngl_window.scene.camera import KeyboardCamera
+
+import numpy as np
+
 from pyrr import Matrix44
 
 
 class Object:
-    def __init__(self):
+    def __init__(self) -> None:
         self._scale = np.array((0., 0., 0.))
         self._rotation = np.array((0., 0., 0.))
         self._translation = np.array((0., 0., 0.))
@@ -21,55 +25,65 @@ class Object:
         self.matrix = None
 
     # translation
-    def set_translate(self, *xyz):
+    def set_translate(self, *xyz: float) -> None:
+        """Set the current translation by overwriting the old one."""
         self._translation = xyz
         self._mt = Matrix44.from_translation(self._translation)
 
-    def translate(self, *xyz):
+    def translate(self, *xyz: float) -> None:
+        """Translate by xyz."""
         self._translation += xyz
         self._mt = Matrix44.from_translation(self._translation)
 
     # rotation
-    def set_rotation(self, *xyz):
+    def set_rotation(self, *xyz: float) -> None:
+        """Set the current rotation by overwriting the old one."""
         self._rotation = xyz
         self._mr = Matrix44.from_eulers(self._rotation)
 
-    def rotate(self, *xyz):
+    def rotate(self, *xyz: float) -> None:
+        """Rotate by xyz."""
         self._rotation += xyz
         self._mr = Matrix44.from_eulers(self._rotation)
 
     # scale
-    def set_scale(self, *xyz):
+    def set_scale(self, *xyz: float) -> None:
+        """Set the current scale by overwriting the old one."""
         self._scale = xyz
         self._ms = Matrix44.from_scale(self._scale)
 
-    def scale(self, *xyz):
+    def scale(self, *xyz: float) -> None:
+        """Scale by xyz."""
         self._scale += xyz
         self._ms = Matrix44.from_scale(self._scale)
 
-    def render(self, *args):
-        raise NotImplemented()
+    def render(self, *args) -> None:
+        raise NotImplementedError()
 
     @property
-    def matrix(self):
+    def matrix(self) -> Matrix44:
         return (self._mt * self._mr * self._ms).astype('f4')
 
     @matrix.setter
-    def matrix(self, value):
+    def matrix(self, value: Matrix44) -> None:
         pass
 
 
 class Cube(Object):
-    def __init__(self, pos=(0, 0, 0), size=(1, 1, 1)):
+    def __init__(self,
+                 pos: Tuple[float, float, float] = (0, 0, 0),
+                 size: Tuple[float, float, float] = (1, 1, 1)
+                 ) -> None:
         super().__init__()
         self._cube = geometry.cube(size=size, center=pos)
 
-    def render(self, program):
+    def render(self, program) -> None:
         self._cube.render(program)
 
 
 class CubeViz(mglw.WindowConfig):
-    """Base class with built in 3D camera support"""
+    """Base class with built in 3D camera support."""
+
     title = "Cube"
     resource_dir = (Path(__file__) / '../resources').absolute()
     aspect_ratio = None
@@ -88,7 +102,7 @@ class CubeViz(mglw.WindowConfig):
         self.render_program['m_camera'].write(self.camera.matrix.astype('f4').tobytes())
         self.cube = Cube(size=(.5, .5, .5))
 
-    def render(self, time, frame_time):
+    def render(self, time: float, frame_time: float) -> None:
         self.ctx.clear(51 / 255, 51 / 255, 51 / 255)
         self.ctx.enable_only(moderngl.DEPTH_TEST | moderngl.CULL_FACE)
 
@@ -101,7 +115,7 @@ class CubeViz(mglw.WindowConfig):
         self.render_program['m_camera'].write(self.camera.matrix.astype('f4'))
         self.cube.render(self.render_program)
 
-    def resize(self, width: int, height: int):
+    def resize(self, width: int, height: int) -> None:
         self.camera.projection.update(aspect_ratio=self.wnd.aspect_ratio)
 
 
