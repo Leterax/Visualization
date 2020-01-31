@@ -13,7 +13,7 @@ class Fractal(moderngl_window.WindowConfig):
     resizable = True
     samples = 16
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.quad_fs = quad_fs()
@@ -28,20 +28,16 @@ class Fractal(moderngl_window.WindowConfig):
         self.zoom = 1
         self.center = (0, 0)
 
-    def render(self, time, frame_time):
-        # self.fractal_program['time'].value = time
-
-        # self.fractal_program['c'].value = (math.sin(time), math.cos(time))
-        # self.zoom = ((math.sin(time / 2) + 1) / 2) * 1024 + 1
+    def render(self, time: float, frame_time: float) -> None:
         self.fractal_program['center'].value = self.center
         self.fractal_program['zoom'].value = 1 / self.zoom
         self.quad_fs.render(self.fractal_program)
 
-    def mouse_drag_event(self, x, y, dx, dy):
+    def mouse_drag_event(self, x: float, y: float, dx: float, dy: float) -> None:
         self.center = ((self.center[0] - dx / self.zoom / self.window_size[0]),
                        (self.center[1] + dy / self.zoom / self.window_size[1]))
 
-    def mouse_scroll_event(self, x_offset, y_offset):
+    def mouse_scroll_event(self, x_offset: float, y_offset: float) -> None:
         if y_offset > 0:
             self.zoom += self.zoom
         else:
@@ -51,4 +47,5 @@ class Fractal(moderngl_window.WindowConfig):
 
 
 if __name__ == '__main__':
+    # noinspection PyTypeChecker
     moderngl_window.run_window_config(Fractal)
