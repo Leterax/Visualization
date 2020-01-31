@@ -12,7 +12,7 @@ class Gradient(moderngl_window.WindowConfig):
     resizable = False
     samples = 16
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.quad_fs = geometry.quad_fs()
@@ -23,7 +23,7 @@ class Gradient(moderngl_window.WindowConfig):
         # change this if you want it to go faster/slower
         self.gradient_program['speed'].value = 7.5
 
-    def render(self, time, frame_time):
+    def render(self, time: float, frame_time: float) -> None:
         self.gradient_program['time'].value = time
         self.quad_fs.render(self.gradient_program)
 
