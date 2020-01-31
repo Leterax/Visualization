@@ -45,6 +45,7 @@ class NBodySim(mglw.WindowConfig):
     gl_version = (4, 3)
     title = "N-Body Simulation"
     resource_dir = (Path(__file__) / '../resources').absolute()
+    take_screenshots = False
     screenshots_dir = (Path(__file__) / '../screen_recordings/uniform100').absolute()
     aspect_ratio = None
     window_size = 1280, 720
@@ -56,7 +57,7 @@ class NBodySim(mglw.WindowConfig):
     consts = {
         "COMPUTE_SIZE": min(64, N),
         "N": N,
-        "DT": 20  # DT of 20 seconds
+        "DT": 60*30  # DT of 30 min
     }
 
     NUM_GROUP = int(ceil(N / 64))
@@ -73,7 +74,7 @@ class NBodySim(mglw.WindowConfig):
         # set projection matrices
         projection_matrix = perspective(60, self.wnd.aspect_ratio, .001, 7e15).astype('f4')
         # you might want to change the z component in order to zoom out further.
-        camera_matrix = translation((0, 0, -.1)).astype('f4')
+        camera_matrix = translation((0, 0, -4)).astype('f4')
         self.render_program['m_projection'].write(projection_matrix.tobytes())
         self.render_program['m_camera'].write(camera_matrix.tobytes())
 
@@ -126,12 +127,12 @@ class NBodySim(mglw.WindowConfig):
 
     def render(self, time, frame_time):
 
-        if self.simulated_time - self._last_capture > self.gif_interval:
-            # render the result to the screen
-            self.ctx.clear(51 / 255, 51 / 255, 51 / 255)
-            self.ctx.enable(moderngl.BLEND)
-            self.render_vao.render(self.render_program, mode=moderngl.POINTS)
+        # render the result to the screen
+        self.ctx.clear(51 / 255, 51 / 255, 51 / 255)
+        self.ctx.enable(moderngl.BLEND)
+        self.render_vao.render(self.render_program, mode=moderngl.POINTS)
 
+        if self.take_screenshots and self.simulated_time - self._last_capture > self.gif_interval:
             # take a screenshot
             screenshot.create(self.wnd.fbo)
             self._last_capture = self.simulated_time

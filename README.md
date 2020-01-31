@@ -1,7 +1,7 @@
 # Visualization
 A Collection of fun visualizations.
 
-##NBody
+## NBody
 ![NBody](Demos/NBody.gif)
 
 A O(n**2) implementation of the NBody simulation using Eulers integrator
