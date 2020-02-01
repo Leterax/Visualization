@@ -22,11 +22,7 @@ void main() {
 out vec4 fragColor;
 in vec2 uv;
 void main() {
-
-    //    vec2 pos = (uv - vec2(0.5)) * vec2(2.0);
-    //    float border = step(0.9, abs(pos.x)) + step(0.9, abs(pos.y));
-    //    fragColor = vec4(vec3(border), 1.0);
-
+    
     if ((uv.x < 0.01 || uv.x > 0.99) || (uv.y < 0.01 || uv.y > 0.99)){
 
         fragColor = vec4(0.15686275, 0.07843137, 0.56078431, 1);
