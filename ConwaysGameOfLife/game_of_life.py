@@ -1,9 +1,7 @@
 from math import ceil
 from pathlib import Path
-from typing import Any
 
 import moderngl
-from moderngl_window.context.base import KeyModifiers
 from moderngl_window.geometry import quad_fs
 import moderngl_window as mglw
 
@@ -14,13 +12,13 @@ class GameOfLife(mglw.WindowConfig):
     title = "GameOfLife"
     resource_dir = (Path(__file__) / '../resources').absolute()
     aspect_ratio = None
-    window_size = 1240, 720
+    window_size = 720, 720
     resizable = True
     samples = 4
 
     # app settings
     # DIM = (7680, 4320)
-    DIM = (1240*10, 720*10)
+    DIM = (1240, 720)
     kernel_size = 3
 
     consts = {}
@@ -36,26 +34,27 @@ class GameOfLife(mglw.WindowConfig):
         self.quad_fs = quad_fs()
         self.program['texture0'] = 0
 
-        self.zoom = 1
+        self.zoom = .15
         self.program['scale'] = self.zoom
         self.zoom_center = (0.5, 0.5)
         self.program['scaleCenter'].value = self.zoom_center
 
         # create the two textures
-        self.texture01 = self.ctx.texture(self.DIM, 4, dtype='f1')
-        self.texture02 = self.ctx.texture(self.DIM, 4, dtype='f1')
-        # self.texture01 = self.load_texture_2d('l2.png')
-        # self.texture02 = self.load_texture_2d('l2.png')
-        self.generate_world()
+        load_image = True
+        if load_image:
+            self.texture01 = self.load_texture_2d('acorn.png')
+            self.texture02 = self.load_texture_2d('acorn.png')
+        else:
+            self.texture01 = self.ctx.texture(self.DIM, 4, dtype='f1')
+            self.texture02 = self.ctx.texture(self.DIM, 4, dtype='f1')
+            self.generate_world()
 
         self.texture01.filter = moderngl.NEAREST, moderngl.NEAREST
         self.texture01.repeat_x, self.texture01.repeat_y = False, False
-
         self.texture02.filter = moderngl.NEAREST, moderngl.NEAREST
         self.texture02.repeat_x, self.texture02.repeat_y = False, False
 
         self.toggle = False
-        input()
 
     def render(self, time: float, frame_time: float) -> None:
         self.ctx.enable(moderngl.BLEND)
@@ -88,15 +87,16 @@ class GameOfLife(mglw.WindowConfig):
 
         return self.ctx.compute_shader(content)
 
-    def generate_world(self):
+    def generate_world(self) -> None:
+        """Generates a world randomly and render it to both textures."""
         fbo_1 = self.ctx.framebuffer(color_attachments=[self.texture02, self.texture01])
         fbo_1.use()
         self.quad_fs.render(self.world_generation_program)
         self.wnd.fbo.use()
 
     def mouse_drag_event(self, x: float, y: float, dx: float, dy: float) -> None:
-        self.zoom_center = ((self.zoom_center[0] - dx / (1/self.zoom) / self.window_size[0] * 3),
-                            (self.zoom_center[1] + dy / (1/self.zoom) / self.window_size[1] * 3))
+        self.zoom_center = ((self.zoom_center[0] - dx / (1 / self.zoom) / self.window_size[0] * 3),
+                            (self.zoom_center[1] + dy / (1 / self.zoom) / self.window_size[1] * 3))
         self.program['scaleCenter'].value = self.zoom_center
 
     def mouse_scroll_event(self, x_offset: float, y_offset: float) -> None:
@@ -105,7 +105,7 @@ class GameOfLife(mglw.WindowConfig):
         else:
             self.zoom *= 1.5
 
-        self.zoom = max(0.01, min(1, self.zoom))
+        self.zoom = max(0.0025, min(1, self.zoom))
         self.program['scale'] = self.zoom
 
 

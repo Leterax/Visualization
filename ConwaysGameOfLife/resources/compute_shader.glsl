@@ -24,11 +24,6 @@ ivec2 wrap(ivec2 p){
 
 void main()
 {
-    // simply copy the texture over
-    //    const ivec2 pixel_xy = ivec2(gl_GlobalInvocationID.xy);
-    //    vec4 pixel = imageLoad(input_image, pixel_xy);
-    //    imageStore(output_image, pixel_xy, pixel);
-
     // use a kernel to get the average color of the sourounding pixels
     vec4 pixel[KERNEL_SIZE][KERNEL_SIZE];
 
