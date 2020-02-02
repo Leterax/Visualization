@@ -12,15 +12,15 @@ class GameOfLife(mglw.WindowConfig):
     title = "GameOfLife"
     resource_dir = (Path(__file__) / '../resources').absolute()
     aspect_ratio = None
-    window_size = 720, 720
+    window_size = 1240, 720
     resizable = True
-    samples = 4
+    samples = 16
 
     # app settings
     # DIM = (7680, 4320)
-    DIM = (1240, 720)
+    DIM = (12400, 7200)
     kernel_size = 3
-    fps = 30
+    fps = 6
 
     consts = {}
 
@@ -35,13 +35,13 @@ class GameOfLife(mglw.WindowConfig):
         self.quad_fs = quad_fs()
         self.program['texture0'] = 0
 
-        self.zoom = .15
+        self.zoom = 0.0025
         self.program['scale'] = self.zoom
         self.zoom_center = (0.5, 0.5)
         self.program['scaleCenter'].value = self.zoom_center
 
         # create the two textures
-        load_image = True
+        load_image = False
         if load_image:
             self.texture01 = self.load_texture_2d('acorn.png')
             self.texture02 = self.load_texture_2d('acorn.png')
@@ -58,6 +58,7 @@ class GameOfLife(mglw.WindowConfig):
         self.toggle = False
 
         self.last_frame = -10
+        input()
 
     def render(self, time: float, frame_time: float) -> None:
         self.ctx.enable(moderngl.BLEND)

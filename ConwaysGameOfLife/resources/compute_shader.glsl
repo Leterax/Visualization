@@ -57,5 +57,5 @@ void main()
         next_value = (neighbours == 3) ? LIVING : DEAD;
     }
 
-    imageStore(output_image, pixel_xy, vec4(1, 0, 0, next_value));
+    imageStore(output_image, pixel_xy, vec4(0.1176, 0.9215,  0.1882, next_value));
 }

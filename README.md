@@ -11,6 +11,9 @@ A O(n**2) implementation of the NBody simulation using Eulers integrator
 
 Bouncing particles done with a compute-shader
 
+## Conway's Game of Life
+![Conway's GoL](Demos/ConwaysGameOfLife.gif)
+
 ## TextArt
 ![TextArt](Demos/TextArt.gif)
 
