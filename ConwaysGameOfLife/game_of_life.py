@@ -1,8 +1,6 @@
 from math import ceil
 from pathlib import Path
 
-import numpy as np
-
 import moderngl
 from moderngl_window.geometry import quad_fs
 import moderngl_window as mglw
@@ -14,18 +12,16 @@ class GameOfLife(mglw.WindowConfig):
     title = "GameOfLife"
     resource_dir = (Path(__file__) / '../resources').absolute()
     aspect_ratio = None
-    window_size = 1280, 720
-    resizable = False
+    window_size = 1240, 720
+    resizable = True
     samples = 4
 
     # app settings
-    N = 128
-    compute_size = min(3, N)
-    num_group = int(ceil(N / 3))
+    DIM = (7680, 4320)
+    # DIM = (15_000, 15_000)
+    kernel_size = 3
 
-    consts = {
-        "COMPUTE_SIZE": compute_size
-    }
+    consts = {}
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -33,42 +29,42 @@ class GameOfLife(mglw.WindowConfig):
         # load programs
         self.compute_shader = self.load_compute('compute_shader.glsl', self.consts)
         self.program = self.load_program('my_shader.glsl')
+        self.world_generation_program = self.load_program('generate_world.glsl')
 
-        self.compute_shader['input_image'] = 0
-        self.compute_shader['output_image'] = 1
+        self.quad_fs = quad_fs()
+        self.program['texture0'] = 0
 
         # create the two textures
-        self.texture01 = self.ctx.texture((256, 256), 1, dtype='f4')
-        self.texture02 = self.ctx.texture((256, 256), 1, dtype='f4')
+        self.texture01 = self.ctx.texture(self.DIM, 4, dtype='f1')
+        self.texture02 = self.ctx.texture(self.DIM, 4, dtype='f1')
+        # self.texture01 = self.load_texture_2d('l2.png')
+        # self.texture02 = self.load_texture_2d('l2.png')
+        print(self.texture02.components, self.texture02.dtype)
+        self.generate_world()
         self.texture01.filter = moderngl.NEAREST, moderngl.NEAREST
         self.texture02.filter = moderngl.NEAREST, moderngl.NEAREST
 
-        data = np.ones((256, 256), dtype='f4')
-        self.texture02.write(data)
-
-        # bind the textures
-        self.texture01.bind_to_image(0, read=True, write=True)
-        self.texture02.bind_to_image(1, read=True, write=True)
-
-        self.quad_fs = quad_fs()
-        self.program['texture0'] = 1
+        self.toggle = False
 
     def render(self, time: float, frame_time: float) -> None:
+        self.ctx.enable(moderngl.BLEND)
         self.ctx.clear(51 / 255, 51 / 255, 51 / 255)
 
         # bind the textures
-        self.texture01.bind_to_image(0, read=True, write=False)
-        self.texture02.bind_to_image(1, read=False, write=True)
+        self.texture01.bind_to_image(self.toggle, read=True, write=True)
+        self.texture02.bind_to_image(not self.toggle, read=True, write=True)
 
         # run the compute shader
         w, h = self.texture01.size
-        group_size_x = int(w/3)
-        group_size_y = int(h/3)
-        self.compute_shader.run(group_x=group_size_x, group_y=group_size_y)
+        group_size_x = int(ceil(w / self.kernel_size))
+        group_size_y = int(ceil(h / self.kernel_size))
+        self.compute_shader.run(group_size_x, group_size_y, 1)
 
         # render the result
-        self.texture02.use(location=1)
+        [self.texture01, self.texture02][self.toggle].use(location=0)
         self.quad_fs.render(self.program)
+
+        self.toggle = not self.toggle
 
     def load_compute(self, uri: str, consts: dict) -> moderngl.ComputeShader:
         """Read compute shader code and set consts."""
@@ -80,6 +76,12 @@ class GameOfLife(mglw.WindowConfig):
             content = content.replace(f"0//%{key}%", str(value))
 
         return self.ctx.compute_shader(content)
+
+    def generate_world(self):
+        fbo_1 = self.ctx.framebuffer(color_attachments=[self.texture02, self.texture01])
+        fbo_1.use()
+        self.quad_fs.render(self.world_generation_program)
+        self.wnd.fbo.use()
 
 
 if __name__ == '__main__':

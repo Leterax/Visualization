@@ -9,11 +9,11 @@ void main() {
     uv = in_texcoord_0;
 }
 
-    #elif defined FRAGMENT_SHADER
+#elif defined FRAGMENT_SHADER
 uniform sampler2D texture0;
 out vec4 fragColor;
 in vec2 uv;
 void main() {
-    fragColor = texture(texture0, uv);
+    fragColor = vec4(texture(texture0, uv));
 }
-    #endif
+#endif
