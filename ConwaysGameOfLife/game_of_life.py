@@ -20,6 +20,7 @@ class GameOfLife(mglw.WindowConfig):
     # DIM = (7680, 4320)
     DIM = (1240, 720)
     kernel_size = 3
+    fps = 30
 
     consts = {}
 
@@ -56,25 +57,32 @@ class GameOfLife(mglw.WindowConfig):
 
         self.toggle = False
 
+        self.last_frame = -10
+
     def render(self, time: float, frame_time: float) -> None:
         self.ctx.enable(moderngl.BLEND)
         self.ctx.clear(51 / 255, 51 / 255, 51 / 255)
 
-        # bind the textures
-        self.texture01.bind_to_image(self.toggle, read=True, write=True)
-        self.texture02.bind_to_image(not self.toggle, read=True, write=True)
+        # slow down to our fps
+        if time - self.last_frame > 1 / self.fps:
+            self.last_frame = time
 
-        # run the compute shader
-        w, h = self.texture01.size
-        group_size_x = int(ceil(w / self.kernel_size))
-        group_size_y = int(ceil(h / self.kernel_size))
-        self.compute_shader.run(group_size_x, group_size_y, 1)
+            # bind the textures
+            self.texture01.bind_to_image(self.toggle, read=True, write=True)
+            self.texture02.bind_to_image(not self.toggle, read=True, write=True)
 
+            # run the compute shader
+            w, h = self.texture01.size
+            group_size_x = int(ceil(w / self.kernel_size))
+            group_size_y = int(ceil(h / self.kernel_size))
+            self.compute_shader.run(group_size_x, group_size_y, 1)
+
+            self.toggle = not self.toggle
+
+        # but we always want to display the world, at 60 fps
         # render the result
-        [self.texture01, self.texture02][self.toggle].use(location=0)
+        [self.texture01, self.texture02][not self.toggle].use(location=0)
         self.quad_fs.render(self.program)
-
-        self.toggle = not self.toggle
 
     def load_compute(self, uri: str, consts: dict) -> moderngl.ComputeShader:
         """Read compute shader code and set consts."""
