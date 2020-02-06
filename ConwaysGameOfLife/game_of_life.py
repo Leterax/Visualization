@@ -14,13 +14,14 @@ class GameOfLife(mglw.WindowConfig):
     aspect_ratio = None
     window_size = 1240, 720
     resizable = True
-    samples = 16
+    samples = 2
 
     # app settings
     # DIM = (7680, 4320)
     DIM = (12400, 7200)
     kernel_size = 3
-    fps = 6
+    # fps to update the game at, not the screen
+    fps = 60
 
     consts = {}
 
@@ -58,7 +59,6 @@ class GameOfLife(mglw.WindowConfig):
         self.toggle = False
 
         self.last_frame = -10
-        input()
 
     def render(self, time: float, frame_time: float) -> None:
         self.ctx.enable(moderngl.BLEND)
