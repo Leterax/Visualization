@@ -1,5 +1,6 @@
 from math import ceil
 from pathlib import Path
+import time
 
 import moderngl
 from moderngl_window.geometry import quad_fs
@@ -12,16 +13,16 @@ class GameOfLife(mglw.WindowConfig):
     title = "GameOfLife"
     resource_dir = (Path(__file__) / '../resources').absolute()
     aspect_ratio = None
-    window_size = 1240, 720
+    window_size = 720, 720
     resizable = True
     samples = 2
 
     # app settings
     # DIM = (7680, 4320)
-    DIM = (12400, 7200)
+    DIM = (720, 720)
     kernel_size = 3
     # fps to update the game at, not the screen
-    fps = 60
+    fps = 10
 
     consts = {}
 
@@ -36,13 +37,13 @@ class GameOfLife(mglw.WindowConfig):
         self.quad_fs = quad_fs()
         self.program['texture0'] = 0
 
-        self.zoom = 0.0025
+        self.zoom = 0.15
         self.program['scale'] = self.zoom
         self.zoom_center = (0.5, 0.5)
         self.program['scaleCenter'].value = self.zoom_center
 
         # create the two textures
-        load_image = False
+        load_image = True
         if load_image:
             self.texture01 = self.load_texture_2d('acorn.png')
             self.texture02 = self.load_texture_2d('acorn.png')
@@ -58,6 +59,10 @@ class GameOfLife(mglw.WindowConfig):
 
         self.toggle = False
 
+        self.paused = True
+        self._paused_last = time.time()
+        self._pause_cool_down = .1
+
         self.last_frame = -10
 
     def render(self, time: float, frame_time: float) -> None:
@@ -65,7 +70,7 @@ class GameOfLife(mglw.WindowConfig):
         self.ctx.clear(51 / 255, 51 / 255, 51 / 255)
 
         # slow down to our fps
-        if time - self.last_frame > 1 / self.fps:
+        if time - self.last_frame > 1 / self.fps and not self.paused:
             self.last_frame = time
 
             # bind the textures
@@ -116,6 +121,12 @@ class GameOfLife(mglw.WindowConfig):
 
         self.zoom = max(0.0025, min(1, self.zoom))
         self.program['scale'] = self.zoom
+
+    def key_event(self, key, action, modifiers):
+        keys = self.wnd.keys
+        if key == keys.SPACE and time.time() - self._paused_last > self._pause_cool_down:
+            self.paused = not self.paused
+            self._paused_last = time.time()
 
 
 if __name__ == '__main__':
