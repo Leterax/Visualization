@@ -1,9 +1,8 @@
-// %VARIABLE% will be replaced with consts by python code
-
 #version 430
-#define GROUP_SIZE 0//%COMPUTE_SIZE%
-#define BALL_SIZE 0//%BALL_SIZE%
-#define BOX_SIZE 0//%BOX_SIZE%
+
+#define GROUP_SIZE 0
+#define BALL_SIZE 0
+#define BOX_SIZE 0
 
 layout(local_size_x=GROUP_SIZE) in;
 

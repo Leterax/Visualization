@@ -60,7 +60,7 @@ class ComputeShaderExample(mglw.WindowConfig):
     consts = {
         # if `N` is below 64 use it as the number of workers.
         # if `N` is larger use larger worker groups
-        "COMPUTE_SIZE": min(64, N),
+        "GROUP_SIZE": min(64, N),
         "BALL_SIZE": BALL_SIZE,
         "BOX_SIZE": BOX_SIZE,
     }
@@ -73,7 +73,9 @@ class ComputeShaderExample(mglw.WindowConfig):
         super().__init__(**kwargs)
 
         # load programs
-        self.compute_shader = self.load_compute("compute_shader.glsl", self.consts)
+        self.compute_shader = self.load_compute_shader(
+            "compute_shader.glsl", self.consts
+        )
         self.render_program = self.load_program("points.glsl")
         self.render_program = self.load_program("balls.glsl")
         self.box_program = self.load_program("box.glsl")
@@ -148,17 +150,6 @@ class ComputeShaderExample(mglw.WindowConfig):
         self._toggle = not self._toggle
         self.buffer1.bind_to_storage_buffer(self._toggle)
         self.buffer2.bind_to_storage_buffer(not self._toggle)
-
-    def load_compute(self, uri: str, consts: dict) -> moderngl.ComputeShader:
-        """Read compute shader code and set consts."""
-        with open(self.resource_dir / uri, "r") as fp:
-            content = fp.read()
-
-        # feed constant values
-        for key, value in consts.items():
-            content = content.replace(f"0//%{key}%", str(value))
-
-        return self.ctx.compute_shader(content)
 
     def generate_data(self) -> np.array:
         # balls start in the center of the box,
