@@ -1,6 +1,8 @@
 # Visualization
 A Collection of fun visualizations.
 
+[![works badge](https://cdn.jsdelivr.net/gh/nikku/works-on-my-machine@v0.2.0/badge.svg)](https://github.com/nikku/works-on-my-machine)
+
 To try them out, run `demo_launcher.py`.
 
 Settings can be accessed by passing the usual arguments `"-s 4 --fullscreen"` to the settings promt. 
